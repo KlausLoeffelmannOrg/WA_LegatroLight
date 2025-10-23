@@ -90,8 +90,8 @@ Settings are stored in: `%LOCALAPPDATA%\LegatroExp\settings.json`
 
 ```bash
 # Clone the repository
-git clone https://github.com/KlausLoeffelmannOrg/LegatroLight.git
-cd LegatroLight
+git clone https://github.com/KlausLoeffelmannOrg/WA_LegatroLight.git
+cd WA_LegatroLight
 
 # Restore dependencies
 dotnet restore
@@ -99,8 +99,20 @@ dotnet restore
 # Build the solution
 dotnet build
 
-# Run the application
+# Note: The application requires Windows to run
+# Running is only supported on Windows due to WinForms and DirectoryServices dependencies
+```
+
+## Running the Application (Windows Only)
+
+The application is a Windows Forms desktop application and requires Windows 10 or later to run.
+
+```bash
+# After building, run the application:
 dotnet run --project LegatroExp/LegatroExp.csproj
+
+# Or run the executable directly:
+LegatroExp/bin/Debug/net9.0-windows/LegatroExp.exe
 ```
 
 ## Project Structure
@@ -141,6 +153,20 @@ LegatroExp/
 - **Extension**: `.legatro`
 - **Default Location**: `%USERPROFILE%\Documents\LegatroExp\default.legatro`
 - **Backup**: `{database}.bak` (created on clean shutdown if auto-backup enabled)
+- **Format**: SQLite 3 database
+
+### Database Location Examples
+
+- Windows: `C:\Users\YourName\Documents\LegatroExp\default.legatro`
+- Backup: `C:\Users\YourName\Documents\LegatroExp\default.legatro.bak`
+
+### Backup Behavior
+
+- Auto-backup is enabled by default
+- Backup is created when you close the application normally (File > Quit or X button)
+- Backup file has `.bak` extension appended to the database file name
+- Each shutdown overwrites the previous backup
+- To disable auto-backup: Edit settings file or use Options dialog (when implemented)
 
 ## First Run Experience
 
@@ -148,11 +174,67 @@ LegatroExp/
 2. User Setup Assistant form appears with Windows user information pre-populated
 3. User can optionally modify display name, nickname, and contact information
 4. Upon confirmation:
-   - Database is created
+   - Database is created at `%USERPROFILE%\Documents\LegatroExp\default.legatro`
    - System groups and categories are seeded
    - Default project is created
    - User information is saved
 5. Main application window opens
+
+## Current Features (v0.1 - MVP)
+
+### ✅ Working Features
+
+**Task Management:**
+- View all groups in a hierarchical TreeView
+- Tasks automatically grouped by date (My Day, Sliding Week, My Month)
+- Create new tasks quickly with the "New Task" entry box
+- View comprehensive task details when selected:
+  - Display name, description
+  - Creation date, due date
+  - Estimated effort and time spent
+  - Calculated percent done
+  - Completion status
+
+**Time Tracking:**
+- View time entries for selected tasks in a DataGridView
+- See start time, end time, duration, and work description
+- Times displayed in local timezone
+
+**Groups:**
+- 7 predefined system groups:
+  - My Day (tasks from today)
+  - Sliding Week (tasks from last 7 days)
+  - My Month (tasks from last 30 days)
+  - Roaming Links (manual group)
+  - Roaming Notes (manual group)
+  - Done (completed tasks)
+  - Clutter (miscellaneous)
+
+**Projects:**
+- Default system project for general tasks
+- Tasks automatically assigned to default project
+
+**Categories:**
+- 10 predefined color categories (Red through Gray)
+
+**Application Features:**
+- Windows authentication (no login required)
+- Settings persistence (window position, splitter positions)
+- Auto-backup on exit (.bak file created)
+- Real-time clock in status bar
+- Database name display in status bar
+
+### 🚧 Features In Development
+
+See `FUTURE_ISSUES.md` for the complete list of planned features:
+- Task editing with Apply/Cancel buttons
+- Time entry editing and creation
+- Groups, Projects, and Categories management dialogs
+- Options dialog for settings
+- File operations (New/Open solution)
+- Dark mode support
+- Localization (multi-language)
+- Advanced features (search, filtering, reporting)
 
 ## Menu Structure
 
@@ -162,13 +244,34 @@ LegatroExp/
 - **Quit**: Close application with optional backup
 
 ### Edit Menu
-- **Groups...**: Manage task groups
-- **Projects...**: Manage projects
-- **Categories...**: Manage color categories
-- **Tasks...**: Manage tasks
+- **Groups...**: Manage task groups (not yet implemented)
+- **Projects...**: Manage projects (not yet implemented)
+- **Categories...**: Manage color categories (not yet implemented)
 
 ### Tools Menu
-- **Options...**: Configure application settings
+- **Options...**: Configure application settings (not yet implemented)
+
+## Using the Application
+
+### Creating a New Task
+
+1. Select a group in the TreeView (left panel)
+2. Type the task name in the "New Task" text box
+3. Click the "Add" button
+4. The task appears in the selected group
+
+### Viewing Task Details
+
+1. Click on any task in the TreeView
+2. Task details appear in the "Task Information" group box
+3. Time entries (if any) appear in the bottom DataGridView
+
+### Navigating Groups
+
+1. Expand "All Groups" in the TreeView
+2. Click on any group to see its information
+3. Expand groups to see their tasks
+4. Tasks with "(No tasks)" are empty groups
 
 ## Future Enhancements
 
