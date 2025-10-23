@@ -416,3 +416,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Legatro database files
+*.legatro
+*.legatro-shm
+*.legatro-wal
+*.bak
