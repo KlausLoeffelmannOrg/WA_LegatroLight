@@ -70,10 +70,12 @@ partial class MainForm
         _mnuFileNew.Name = "_mnuFileNew";
         _mnuFileNew.Size = new Size(180, 26);
         _mnuFileNew.Text = "&New Solution";
+        _mnuFileNew.Click += MnuFileNew_Click;
 
         _mnuFileOpen.Name = "_mnuFileOpen";
         _mnuFileOpen.Size = new Size(180, 26);
         _mnuFileOpen.Text = "&Open Solution";
+        _mnuFileOpen.Click += MnuFileOpen_Click;
 
         _mnuFileSep1.Name = "_mnuFileSep1";
         _mnuFileSep1.Size = new Size(177, 6);
@@ -81,6 +83,7 @@ partial class MainForm
         _mnuFileQuit.Name = "_mnuFileQuit";
         _mnuFileQuit.Size = new Size(180, 26);
         _mnuFileQuit.Text = "&Quit";
+        _mnuFileQuit.Click += MnuFileQuit_Click;
 
         _mnuEdit.DropDownItems.AddRange(new ToolStripItem[] { _mnuEditGroups, _mnuEditProjects, _mnuEditCategories, _mnuEditTasks });
         _mnuEdit.Name = "_mnuEdit";
@@ -90,18 +93,22 @@ partial class MainForm
         _mnuEditGroups.Name = "_mnuEditGroups";
         _mnuEditGroups.Size = new Size(180, 26);
         _mnuEditGroups.Text = "&Groups...";
+        _mnuEditGroups.Click += MnuEditGroups_Click;
 
         _mnuEditProjects.Name = "_mnuEditProjects";
         _mnuEditProjects.Size = new Size(180, 26);
         _mnuEditProjects.Text = "&Projects...";
+        _mnuEditProjects.Click += MnuEditProjects_Click;
 
         _mnuEditCategories.Name = "_mnuEditCategories";
         _mnuEditCategories.Size = new Size(180, 26);
         _mnuEditCategories.Text = "&Categories...";
+        _mnuEditCategories.Click += MnuEditCategories_Click;
 
         _mnuEditTasks.Name = "_mnuEditTasks";
         _mnuEditTasks.Size = new Size(180, 26);
         _mnuEditTasks.Text = "&Tasks...";
+        _mnuEditTasks.Click += MnuEditTasks_Click;
 
         _mnuTools.DropDownItems.AddRange(new ToolStripItem[] { _mnuToolsOptions });
         _mnuTools.Name = "_mnuTools";
@@ -111,6 +118,7 @@ partial class MainForm
         _mnuToolsOptions.Name = "_mnuToolsOptions";
         _mnuToolsOptions.Size = new Size(180, 26);
         _mnuToolsOptions.Text = "&Options...";
+        _mnuToolsOptions.Click += MnuToolsOptions_Click;
 
         _statusStrip.Items.AddRange(new ToolStripItem[] { _lblDatabase, _lblSessionStart, _lblStatus, _lblCurrentDate, _lblCurrentTime });
         _statusStrip.Location = new Point(0, 736);

@@ -1,6 +1,7 @@
 using LegatroExp.Data;
 using LegatroExp.Helpers;
 using LegatroExp.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace LegatroExp.Forms;
 
@@ -9,6 +10,8 @@ public partial class MainForm : Form
     private readonly LegatroDbContext _context;
     private readonly User _currentUser;
     private readonly AppSettings _settings;
+    private readonly System.Windows.Forms.Timer _clockTimer;
+    private readonly DateTime _sessionStart;
 
     public MainForm(LegatroDbContext context, User currentUser, AppSettings settings)
     {
@@ -16,8 +19,19 @@ public partial class MainForm : Form
         _currentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
+        _sessionStart = DateTime.Now;
+
         InitializeComponent();
         InitializeForm();
+
+        _clockTimer = new System.Windows.Forms.Timer
+        {
+            Interval = 1000
+        };
+        _clockTimer.Tick += ClockTimer_Tick;
+        _clockTimer.Start();
+
+        UpdateStatusBar();
     }
 
     private void InitializeForm()
@@ -49,15 +63,28 @@ public partial class MainForm : Form
             Location = new Point(left, top);
             Size = new Size(width, height);
         }
+    }
 
-        if (_scMain.Panel1.Width > 0)
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+
+        if (_scMain.Panel1.Width > 0 && _settings.MainWindow.VerticalSplitterPosition > 0)
         {
-            _scMain.SplitterDistance = (int)(_scMain.Width * _settings.MainWindow.VerticalSplitterPosition);
+            int distance = (int)(_scMain.Width * _settings.MainWindow.VerticalSplitterPosition);
+            if (distance > _scMain.Panel1MinSize && distance < _scMain.Width - _scMain.Panel2MinSize)
+            {
+                _scMain.SplitterDistance = distance;
+            }
         }
 
-        if (_scRight.Panel1.Height > 0)
+        if (_scRight.Panel1.Height > 0 && _settings.MainWindow.HorizontalSplitterPosition > 0)
         {
-            _scRight.SplitterDistance = (int)(_scRight.Height * _settings.MainWindow.HorizontalSplitterPosition);
+            int distance = (int)(_scRight.Height * _settings.MainWindow.HorizontalSplitterPosition);
+            if (distance > _scRight.Panel1MinSize && distance < _scRight.Height - _scRight.Panel2MinSize)
+            {
+                _scRight.SplitterDistance = distance;
+            }
         }
     }
 
@@ -91,7 +118,90 @@ public partial class MainForm : Form
 
     private void LoadData()
     {
-        // TODO: Implement data loading
+        LoadGroupsAndTasks();
+    }
+
+    private void LoadGroupsAndTasks()
+    {
+        _tvwTasks.Nodes.Clear();
+
+        TreeNode rootNode = new("Tasks")
+        {
+            Tag = null
+        };
+        _tvwTasks.Nodes.Add(rootNode);
+
+        List<Group> groups = _context.Groups
+            .Where(g => g.DateDeleted == null && !g.IsHidden)
+            .OrderBy(g => g.OrderNo)
+            .ThenBy(g => g.GroupDisplayName)
+            .ToList();
+
+        foreach (Group group in groups)
+        {
+            TreeNode groupNode = new(group.GroupDisplayName)
+            {
+                Tag = group
+            };
+            rootNode.Nodes.Add(groupNode);
+
+            List<Models.Task> tasks = GetTasksForGroup(group);
+
+            foreach (Models.Task task in tasks)
+            {
+                TreeNode taskNode = new(task.DisplayName)
+                {
+                    Tag = task
+                };
+                groupNode.Nodes.Add(taskNode);
+            }
+        }
+
+        rootNode.Expand();
+    }
+
+    private List<Models.Task> GetTasksForGroup(Group group)
+    {
+        List<Models.Task> tasks = new();
+
+        if (group.AutoRangeSpan.HasValue)
+        {
+            DateTime startDate = DateTime.UtcNow.Date.AddDays(group.AutoRangeOffset ?? 0);
+            DateTime endDate = startDate.Add(group.AutoRangeSpan.Value);
+
+            tasks = _context.Tasks
+                .Where(t => t.DateDeleted == null && 
+                           t.DateFinished == null &&
+                           t.DateCreated >= startDate && 
+                           t.DateCreated < endDate)
+                .ToList();
+        }
+        else
+        {
+            List<string> taskIds = _context.TasksGroupsRelations
+                .Where(r => r.IDGroup == group.IDGroup && r.DateDeleted == null)
+                .Select(r => r.IDTask)
+                .ToList();
+
+            tasks = _context.Tasks
+                .Where(t => taskIds.Contains(t.IDTask) && t.DateDeleted == null && t.DateFinished == null)
+                .ToList();
+        }
+
+        return tasks;
+    }
+
+    private void ClockTimer_Tick(object? sender, EventArgs e)
+    {
+        UpdateStatusBar();
+    }
+
+    private void UpdateStatusBar()
+    {
+        _lblDatabase.Text = $"Database: {Path.GetFileName(_settings.DatabasePath ?? "None")}";
+        _lblSessionStart.Text = $"Session Start: {_sessionStart:HH:mm:ss}";
+        _lblCurrentDate.Text = DateTime.Now.ToString("yyyy-MM-dd");
+        _lblCurrentTime.Text = DateTime.Now.ToString("HH:mm:ss");
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
@@ -103,6 +213,7 @@ public partial class MainForm : Form
             return;
         }
 
+        _clockTimer?.Stop();
         SaveWindowPosition();
 
         if (_settings.AutoBackup)
@@ -125,5 +236,45 @@ public partial class MainForm : Form
         {
             // Silently fail if backup cannot be created
         }
+    }
+
+    private void MnuFileQuit_Click(object? sender, EventArgs e)
+    {
+        Close();
+    }
+
+    private void MnuFileNew_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("New Solution functionality not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void MnuFileOpen_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("Open Solution functionality not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void MnuEditGroups_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("Groups editor not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void MnuEditProjects_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("Projects editor not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void MnuEditCategories_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("Categories editor not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void MnuEditTasks_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("Tasks editor not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void MnuToolsOptions_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show("Options dialog not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 }
