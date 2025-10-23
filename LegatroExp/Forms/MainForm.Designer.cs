@@ -265,4 +265,4 @@ partial class MainForm
     private Label _lblPlaceholder;
     private Panel _pnlTimeTracking;
     private Label _lblTimePlaceholder;
-}
+} 

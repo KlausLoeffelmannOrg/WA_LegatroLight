@@ -27,12 +27,13 @@ partial class OptionsForm
         _flpButtons = new FlowLayoutPanel();
         _btnOK = new Button();
         _btnCancel = new Button();
-
         _tlpMain.SuspendLayout();
         _tlpContent.SuspendLayout();
         _flpButtons.SuspendLayout();
         SuspendLayout();
-
+        // 
+        // _tlpMain
+        // 
         _tlpMain.ColumnCount = 1;
         _tlpMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         _tlpMain.Controls.Add(_tlpContent, 0, 0);
@@ -43,11 +44,13 @@ partial class OptionsForm
         _tlpMain.RowCount = 2;
         _tlpMain.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         _tlpMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-        _tlpMain.Size = new Size(484, 311);
+        _tlpMain.Size = new Size(701, 378);
         _tlpMain.TabIndex = 0;
-
+        // 
+        // _tlpContent
+        // 
         _tlpContent.ColumnCount = 2;
-        _tlpContent.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        _tlpContent.ColumnStyles.Add(new ColumnStyle());
         _tlpContent.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         _tlpContent.Controls.Add(_lblSortOrder, 0, 0);
         _tlpContent.Controls.Add(_cmbSortOrder, 1, 0);
@@ -65,27 +68,32 @@ partial class OptionsForm
         _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
         _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
         _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-        _tlpContent.Size = new Size(478, 255);
+        _tlpContent.Size = new Size(695, 322);
         _tlpContent.TabIndex = 0;
-
+        // 
+        // _lblSortOrder
+        // 
         _lblSortOrder.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblSortOrder.AutoSize = true;
-        _lblSortOrder.Location = new Point(13, 20);
+        _lblSortOrder.Location = new Point(13, 15);
         _lblSortOrder.Name = "_lblSortOrder";
-        _lblSortOrder.Size = new Size(179, 20);
+        _lblSortOrder.Size = new Size(244, 30);
         _lblSortOrder.TabIndex = 0;
         _lblSortOrder.Text = "&Default Task Sort Order:";
-
+        // 
+        // _cmbSortOrder
+        // 
         _cmbSortOrder.Dock = DockStyle.Fill;
         _cmbSortOrder.DropDownStyle = ComboBoxStyle.DropDownList;
         _cmbSortOrder.FormattingEnabled = true;
         _cmbSortOrder.Items.AddRange(new object[] { "DisplayName", "DueDate", "PercentDone", "EstimatedEffort", "DateCreated" });
-        _cmbSortOrder.Location = new Point(198, 13);
-        _cmbSortOrder.Margin = new Padding(3);
+        _cmbSortOrder.Location = new Point(263, 13);
         _cmbSortOrder.Name = "_cmbSortOrder";
-        _cmbSortOrder.Size = new Size(267, 28);
+        _cmbSortOrder.Size = new Size(419, 38);
         _cmbSortOrder.TabIndex = 1;
-
+        // 
+        // _chkAutoBackup
+        // 
         _chkAutoBackup.AutoSize = true;
         _chkAutoBackup.Checked = true;
         _chkAutoBackup.CheckState = CheckState.Checked;
@@ -93,52 +101,64 @@ partial class OptionsForm
         _chkAutoBackup.Dock = DockStyle.Fill;
         _chkAutoBackup.Location = new Point(13, 53);
         _chkAutoBackup.Name = "_chkAutoBackup";
-        _chkAutoBackup.Size = new Size(452, 34);
+        _chkAutoBackup.Size = new Size(669, 34);
         _chkAutoBackup.TabIndex = 2;
         _chkAutoBackup.Text = "&Automatically backup database on shutdown";
         _chkAutoBackup.UseVisualStyleBackColor = true;
-
+        // 
+        // _lblBaseFont
+        // 
         _lblBaseFont.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblBaseFont.AutoSize = true;
-        _lblBaseFont.Location = new Point(13, 100);
+        _lblBaseFont.Location = new Point(13, 95);
         _lblBaseFont.Name = "_lblBaseFont";
-        _lblBaseFont.Size = new Size(179, 20);
+        _lblBaseFont.Size = new Size(244, 30);
         _lblBaseFont.TabIndex = 3;
         _lblBaseFont.Text = "&Base Font:";
-
+        // 
+        // _cmbBaseFont
+        // 
         _cmbBaseFont.Dock = DockStyle.Fill;
         _cmbBaseFont.FormattingEnabled = true;
-        _cmbBaseFont.Location = new Point(198, 93);
-        _cmbBaseFont.Margin = new Padding(3);
+        _cmbBaseFont.Location = new Point(263, 93);
         _cmbBaseFont.Name = "_cmbBaseFont";
-        _cmbBaseFont.Size = new Size(267, 28);
+        _cmbBaseFont.Size = new Size(419, 38);
         _cmbBaseFont.TabIndex = 4;
-
+        // 
+        // _lblLanguage
+        // 
         _lblLanguage.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblLanguage.AutoSize = true;
-        _lblLanguage.Location = new Point(13, 140);
+        _lblLanguage.Location = new Point(13, 206);
         _lblLanguage.Name = "_lblLanguage";
-        _lblLanguage.Size = new Size(179, 20);
+        _lblLanguage.Size = new Size(244, 30);
         _lblLanguage.TabIndex = 5;
         _lblLanguage.Text = "&Language:";
-
+        // 
+        // _cmbLanguage
+        // 
         _cmbLanguage.Dock = DockStyle.Fill;
         _cmbLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
         _cmbLanguage.FormattingEnabled = true;
         _cmbLanguage.Items.AddRange(new object[] { "English", "German", "Spanish", "Japanese", "Chinese (Simplified)" });
-        _cmbLanguage.Location = new Point(198, 133);
-        _cmbLanguage.Margin = new Padding(3);
+        _cmbLanguage.Location = new Point(263, 133);
         _cmbLanguage.Name = "_cmbLanguage";
-        _cmbLanguage.Size = new Size(267, 28);
+        _cmbLanguage.Size = new Size(419, 38);
         _cmbLanguage.TabIndex = 6;
-
+        // 
+        // _flpButtons
+        // 
+        _flpButtons.Controls.Add(_btnOK);
+        _flpButtons.Controls.Add(_btnCancel);
         _flpButtons.Dock = DockStyle.Right;
         _flpButtons.FlowDirection = FlowDirection.RightToLeft;
-        _flpButtons.Location = new Point(277, 264);
+        _flpButtons.Location = new Point(494, 331);
         _flpButtons.Name = "_flpButtons";
         _flpButtons.Size = new Size(204, 44);
         _flpButtons.TabIndex = 1;
-
+        // 
+        // _btnOK
+        // 
         _btnOK.Location = new Point(106, 3);
         _btnOK.Name = "_btnOK";
         _btnOK.Size = new Size(95, 35);
@@ -146,7 +166,9 @@ partial class OptionsForm
         _btnOK.Text = "OK";
         _btnOK.UseVisualStyleBackColor = true;
         _btnOK.Click += BtnOK_Click;
-
+        // 
+        // _btnCancel
+        // 
         _btnCancel.Location = new Point(5, 3);
         _btnCancel.Name = "_btnCancel";
         _btnCancel.Size = new Size(95, 35);
@@ -154,15 +176,14 @@ partial class OptionsForm
         _btnCancel.Text = "Cancel";
         _btnCancel.UseVisualStyleBackColor = true;
         _btnCancel.Click += BtnCancel_Click;
-
-        _flpButtons.Controls.Add(_btnOK);
-        _flpButtons.Controls.Add(_btnCancel);
-
+        // 
+        // OptionsForm
+        // 
         AcceptButton = _btnOK;
-        CancelButton = _btnCancel;
-        AutoScaleDimensions = new SizeF(96F, 96F);
+        AutoScaleDimensions = new SizeF(144F, 144F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(484, 311);
+        CancelButton = _btnCancel;
+        ClientSize = new Size(701, 378);
         Controls.Add(_tlpMain);
         Font = new Font("Segoe UI", 11F);
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -171,7 +192,6 @@ partial class OptionsForm
         Name = "OptionsForm";
         StartPosition = FormStartPosition.CenterParent;
         Text = "Options";
-
         _tlpMain.ResumeLayout(false);
         _tlpContent.ResumeLayout(false);
         _tlpContent.PerformLayout();

@@ -41,12 +41,13 @@ partial class UserSetupForm
         _flpButtons = new FlowLayoutPanel();
         _btnOK = new Button();
         _btnCancel = new Button();
-
         _tlpMain.SuspendLayout();
         _tlpContent.SuspendLayout();
         _flpButtons.SuspendLayout();
         SuspendLayout();
-
+        // 
+        // _tlpMain
+        // 
         _tlpMain.ColumnCount = 1;
         _tlpMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         _tlpMain.Controls.Add(_lblTitle, 0, 0);
@@ -59,20 +60,24 @@ partial class UserSetupForm
         _tlpMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
         _tlpMain.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         _tlpMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-        _tlpMain.Size = new Size(584, 561);
+        _tlpMain.Size = new Size(977, 658);
         _tlpMain.TabIndex = 0;
-
+        // 
+        // _lblTitle
+        // 
         _lblTitle.Anchor = AnchorStyles.Left;
         _lblTitle.AutoSize = true;
         _lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-        _lblTitle.Location = new Point(3, 10);
+        _lblTitle.Location = new Point(3, 6);
         _lblTitle.Name = "_lblTitle";
-        _lblTitle.Size = new Size(242, 30);
+        _lblTitle.Size = new Size(285, 38);
         _lblTitle.TabIndex = 0;
         _lblTitle.Text = "User Setup Assistant";
-
+        // 
+        // _tlpContent
+        // 
         _tlpContent.ColumnCount = 2;
-        _tlpContent.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        _tlpContent.ColumnStyles.Add(new ColumnStyle());
         _tlpContent.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         _tlpContent.Controls.Add(_lblUserDisplayId, 0, 0);
         _tlpContent.Controls.Add(_txtUserDisplayId, 1, 0);
@@ -99,184 +104,220 @@ partial class UserSetupForm
         _tlpContent.Name = "_tlpContent";
         _tlpContent.Padding = new Padding(10);
         _tlpContent.RowCount = 10;
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-        _tlpContent.Size = new Size(578, 455);
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.RowStyles.Add(new RowStyle());
+        _tlpContent.Size = new Size(971, 552);
         _tlpContent.TabIndex = 1;
-
+        // 
+        // _lblUserDisplayId
+        // 
         _lblUserDisplayId.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblUserDisplayId.AutoSize = true;
-        _lblUserDisplayId.Location = new Point(13, 18);
+        _lblUserDisplayId.Location = new Point(13, 16);
         _lblUserDisplayId.Name = "_lblUserDisplayId";
-        _lblUserDisplayId.Size = new Size(112, 20);
+        _lblUserDisplayId.Size = new Size(164, 30);
         _lblUserDisplayId.TabIndex = 0;
         _lblUserDisplayId.Text = "&User Display ID:";
-
+        // 
+        // _txtUserDisplayId
+        // 
         _txtUserDisplayId.Dock = DockStyle.Fill;
-        _txtUserDisplayId.Location = new Point(131, 13);
-        _txtUserDisplayId.Margin = new Padding(3);
+        _txtUserDisplayId.Location = new Point(183, 13);
         _txtUserDisplayId.Name = "_txtUserDisplayId";
-        _txtUserDisplayId.Size = new Size(434, 27);
+        _txtUserDisplayId.Size = new Size(775, 37);
         _txtUserDisplayId.TabIndex = 1;
-
+        // 
+        // _lblUserAuthId
+        // 
         _lblUserAuthId.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblUserAuthId.AutoSize = true;
-        _lblUserAuthId.Location = new Point(13, 53);
+        _lblUserAuthId.Location = new Point(13, 59);
         _lblUserAuthId.Name = "_lblUserAuthId";
-        _lblUserAuthId.Size = new Size(112, 20);
+        _lblUserAuthId.Size = new Size(164, 30);
         _lblUserAuthId.TabIndex = 2;
         _lblUserAuthId.Text = "User Auth ID:";
-
+        // 
+        // _txtUserAuthId
+        // 
         _txtUserAuthId.Dock = DockStyle.Fill;
-        _txtUserAuthId.Location = new Point(131, 48);
-        _txtUserAuthId.Margin = new Padding(3);
+        _txtUserAuthId.Location = new Point(183, 56);
         _txtUserAuthId.Name = "_txtUserAuthId";
         _txtUserAuthId.ReadOnly = true;
-        _txtUserAuthId.Size = new Size(434, 27);
+        _txtUserAuthId.Size = new Size(775, 37);
         _txtUserAuthId.TabIndex = 3;
         _txtUserAuthId.TabStop = false;
-
+        // 
+        // _lblUserSid
+        // 
         _lblUserSid.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblUserSid.AutoSize = true;
-        _lblUserSid.Location = new Point(13, 88);
+        _lblUserSid.Location = new Point(13, 102);
         _lblUserSid.Name = "_lblUserSid";
-        _lblUserSid.Size = new Size(112, 20);
+        _lblUserSid.Size = new Size(164, 30);
         _lblUserSid.TabIndex = 4;
         _lblUserSid.Text = "User SID:";
-
+        // 
+        // _txtUserSid
+        // 
         _txtUserSid.Dock = DockStyle.Fill;
-        _txtUserSid.Location = new Point(131, 83);
-        _txtUserSid.Margin = new Padding(3);
+        _txtUserSid.Location = new Point(183, 99);
         _txtUserSid.Name = "_txtUserSid";
         _txtUserSid.ReadOnly = true;
-        _txtUserSid.Size = new Size(434, 27);
+        _txtUserSid.Size = new Size(775, 37);
         _txtUserSid.TabIndex = 5;
         _txtUserSid.TabStop = false;
-
+        // 
+        // _lblDomain
+        // 
         _lblDomain.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblDomain.AutoSize = true;
-        _lblDomain.Location = new Point(13, 123);
+        _lblDomain.Location = new Point(13, 145);
         _lblDomain.Name = "_lblDomain";
-        _lblDomain.Size = new Size(112, 20);
+        _lblDomain.Size = new Size(164, 30);
         _lblDomain.TabIndex = 6;
         _lblDomain.Text = "Domain:";
-
+        // 
+        // _txtDomain
+        // 
         _txtDomain.Dock = DockStyle.Fill;
-        _txtDomain.Location = new Point(131, 118);
-        _txtDomain.Margin = new Padding(3);
+        _txtDomain.Location = new Point(183, 142);
         _txtDomain.Name = "_txtDomain";
         _txtDomain.ReadOnly = true;
-        _txtDomain.Size = new Size(434, 27);
+        _txtDomain.Size = new Size(775, 37);
         _txtDomain.TabIndex = 7;
         _txtDomain.TabStop = false;
-
+        // 
+        // _lblUserName
+        // 
         _lblUserName.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblUserName.AutoSize = true;
-        _lblUserName.Location = new Point(13, 158);
+        _lblUserName.Location = new Point(13, 188);
         _lblUserName.Name = "_lblUserName";
-        _lblUserName.Size = new Size(112, 20);
+        _lblUserName.Size = new Size(164, 30);
         _lblUserName.TabIndex = 8;
         _lblUserName.Text = "User Name:";
-
+        // 
+        // _txtUserName
+        // 
         _txtUserName.Dock = DockStyle.Fill;
-        _txtUserName.Location = new Point(131, 153);
-        _txtUserName.Margin = new Padding(3);
+        _txtUserName.Location = new Point(183, 185);
         _txtUserName.Name = "_txtUserName";
         _txtUserName.ReadOnly = true;
-        _txtUserName.Size = new Size(434, 27);
+        _txtUserName.Size = new Size(775, 37);
         _txtUserName.TabIndex = 9;
         _txtUserName.TabStop = false;
-
+        // 
+        // _lblDisplayName
+        // 
         _lblDisplayName.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblDisplayName.AutoSize = true;
-        _lblDisplayName.Location = new Point(13, 193);
+        _lblDisplayName.Location = new Point(13, 231);
         _lblDisplayName.Name = "_lblDisplayName";
-        _lblDisplayName.Size = new Size(112, 20);
+        _lblDisplayName.Size = new Size(164, 30);
         _lblDisplayName.TabIndex = 10;
         _lblDisplayName.Text = "&Display Name:";
-
+        // 
+        // _txtDisplayName
+        // 
         _txtDisplayName.Dock = DockStyle.Fill;
-        _txtDisplayName.Location = new Point(131, 188);
-        _txtDisplayName.Margin = new Padding(3);
+        _txtDisplayName.Location = new Point(183, 228);
         _txtDisplayName.Name = "_txtDisplayName";
-        _txtDisplayName.Size = new Size(434, 27);
+        _txtDisplayName.Size = new Size(775, 37);
         _txtDisplayName.TabIndex = 11;
-
+        // 
+        // _lblFirstName
+        // 
         _lblFirstName.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblFirstName.AutoSize = true;
-        _lblFirstName.Location = new Point(13, 228);
+        _lblFirstName.Location = new Point(13, 274);
         _lblFirstName.Name = "_lblFirstName";
-        _lblFirstName.Size = new Size(112, 20);
+        _lblFirstName.Size = new Size(164, 30);
         _lblFirstName.TabIndex = 12;
         _lblFirstName.Text = "&First Name:";
-
+        // 
+        // _txtFirstName
+        // 
         _txtFirstName.Dock = DockStyle.Fill;
-        _txtFirstName.Location = new Point(131, 223);
-        _txtFirstName.Margin = new Padding(3);
+        _txtFirstName.Location = new Point(183, 271);
         _txtFirstName.Name = "_txtFirstName";
-        _txtFirstName.Size = new Size(434, 27);
+        _txtFirstName.Size = new Size(775, 37);
         _txtFirstName.TabIndex = 13;
-
+        // 
+        // _lblMiddleName
+        // 
         _lblMiddleName.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblMiddleName.AutoSize = true;
-        _lblMiddleName.Location = new Point(13, 263);
+        _lblMiddleName.Location = new Point(13, 317);
         _lblMiddleName.Name = "_lblMiddleName";
-        _lblMiddleName.Size = new Size(112, 20);
+        _lblMiddleName.Size = new Size(164, 30);
         _lblMiddleName.TabIndex = 14;
         _lblMiddleName.Text = "&Middle Name:";
-
+        // 
+        // _txtMiddleName
+        // 
         _txtMiddleName.Dock = DockStyle.Fill;
-        _txtMiddleName.Location = new Point(131, 258);
-        _txtMiddleName.Margin = new Padding(3);
+        _txtMiddleName.Location = new Point(183, 314);
         _txtMiddleName.Name = "_txtMiddleName";
-        _txtMiddleName.Size = new Size(434, 27);
+        _txtMiddleName.Size = new Size(775, 37);
         _txtMiddleName.TabIndex = 15;
-
+        // 
+        // _lblLastName
+        // 
         _lblLastName.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblLastName.AutoSize = true;
-        _lblLastName.Location = new Point(13, 298);
+        _lblLastName.Location = new Point(13, 360);
         _lblLastName.Name = "_lblLastName";
-        _lblLastName.Size = new Size(112, 20);
+        _lblLastName.Size = new Size(164, 30);
         _lblLastName.TabIndex = 16;
         _lblLastName.Text = "&Last Name:";
-
+        // 
+        // _txtLastName
+        // 
         _txtLastName.Dock = DockStyle.Fill;
-        _txtLastName.Location = new Point(131, 293);
-        _txtLastName.Margin = new Padding(3);
+        _txtLastName.Location = new Point(183, 357);
         _txtLastName.Name = "_txtLastName";
-        _txtLastName.Size = new Size(434, 27);
+        _txtLastName.Size = new Size(775, 37);
         _txtLastName.TabIndex = 17;
-
+        // 
+        // _lblEmail
+        // 
         _lblEmail.Anchor = AnchorStyles.Left | AnchorStyles.Right;
         _lblEmail.AutoSize = true;
-        _lblEmail.Location = new Point(13, 333);
+        _lblEmail.Location = new Point(13, 454);
         _lblEmail.Name = "_lblEmail";
-        _lblEmail.Size = new Size(112, 20);
+        _lblEmail.Size = new Size(164, 30);
         _lblEmail.TabIndex = 18;
         _lblEmail.Text = "&Email:";
-
+        // 
+        // _txtEmail
+        // 
         _txtEmail.Dock = DockStyle.Fill;
-        _txtEmail.Location = new Point(131, 328);
-        _txtEmail.Margin = new Padding(3);
+        _txtEmail.Location = new Point(183, 400);
         _txtEmail.Name = "_txtEmail";
-        _txtEmail.Size = new Size(434, 27);
+        _txtEmail.Size = new Size(775, 37);
         _txtEmail.TabIndex = 19;
-
+        // 
+        // _flpButtons
+        // 
+        _flpButtons.Controls.Add(_btnOK);
+        _flpButtons.Controls.Add(_btnCancel);
         _flpButtons.Dock = DockStyle.Right;
         _flpButtons.FlowDirection = FlowDirection.RightToLeft;
-        _flpButtons.Location = new Point(374, 514);
+        _flpButtons.Location = new Point(767, 611);
         _flpButtons.Name = "_flpButtons";
         _flpButtons.Size = new Size(207, 44);
         _flpButtons.TabIndex = 2;
-
+        // 
+        // _btnOK
+        // 
         _btnOK.Location = new Point(109, 3);
         _btnOK.Name = "_btnOK";
         _btnOK.Size = new Size(95, 35);
@@ -284,7 +325,9 @@ partial class UserSetupForm
         _btnOK.Text = "OK";
         _btnOK.UseVisualStyleBackColor = true;
         _btnOK.Click += BtnOK_Click;
-
+        // 
+        // _btnCancel
+        // 
         _btnCancel.Location = new Point(8, 3);
         _btnCancel.Name = "_btnCancel";
         _btnCancel.Size = new Size(95, 35);
@@ -292,14 +335,13 @@ partial class UserSetupForm
         _btnCancel.Text = "Cancel";
         _btnCancel.UseVisualStyleBackColor = true;
         _btnCancel.Click += BtnCancel_Click;
-
-        _flpButtons.Controls.Add(_btnOK);
-        _flpButtons.Controls.Add(_btnCancel);
-
+        // 
+        // UserSetupForm
+        // 
         AcceptButton = _btnOK;
-        AutoScaleDimensions = new SizeF(96F, 96F);
+        AutoScaleDimensions = new SizeF(144F, 144F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(584, 561);
+        ClientSize = new Size(977, 658);
         Controls.Add(_tlpMain);
         Font = new Font("Segoe UI", 11F);
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -308,7 +350,6 @@ partial class UserSetupForm
         Name = "UserSetupForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "User Setup Assistant";
-
         _tlpMain.ResumeLayout(false);
         _tlpMain.PerformLayout();
         _tlpContent.ResumeLayout(false);
