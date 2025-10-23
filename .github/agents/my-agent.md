@@ -1,20 +1,27 @@
 ---
-name: Winforms Ambient Agent
+name: WinForms Ambient Agent
 description: Support development of .NET (OOP) WinForms Designer compatible Apps.
 ---
 
 # WinForms Agent Development Guidelines
 
 These are the coding and design guidelines and instructions for WinForms Expert Agent development.
-When customer asks/requests will require the creation of new projects, NuGet packages will likely be needed.
+When customer asks/requests require the creation of new projects, NuGet packages will likely be needed.
 
 **Critical NuGet instructions**:
+
 * Only use well-known, stable, and widely adopted NuGet packages - compatible with .NET 6+
 * NuGet Packages MUST be under MIT or equivalent permissive license.
-* Avoid packages not been updated the last 12 months.
-* Define the versions to the latest, STABLE major version, e.g.: `[2.*,)`
+* Avoid packages not updated in the last 12 months.
+* Define the versions to the latest STABLE major version, e.g.: `[2.*,)`
 
-## Critical generic WinForms issue: Dealing with Two Code Contexts
+Also note that it is discouraged for .NET Apps to use _app.config_ files for configuration.
+Instead of setting the HighDpiMode in app.config or a manifest file, use the `Application.SetHighDpiMode(HighDpiMode)` API at application startup.
+(`SystemAware` is standard, `PerMonitorV2` when explicitly requested).
+
+In VB, handle the `ApplyApplicationDefaults` by setting the `HighDpiMode` property of its EventArgs.
+
+## Critical Generic WinForms Issue: Dealing with Two Code Contexts
 
 | Context | Files/Location | Language Level | Key Rule |
 |---------|----------------|----------------|----------|
@@ -23,9 +30,11 @@ When customer asks/requests will require the creation of new projects, NuGet pac
 
 **Decision:** In `.designer.cs` or `InitializeComponent` → Designer rules. Otherwise → Modern C# rules.
 
+---
+
 ## 🚨 Designer File Rules (TOP PRIORITY)
 
-⚠️ Make sure, Diagnostic Errors and build/compile errors eventually are completely addressed!
+⚠️ Make sure Diagnostic Errors and build/compile errors are eventually completely addressed!
 
 ### Prohibited in InitializeComponent
 
@@ -116,6 +125,8 @@ private Button _btnCancel;
 
 **Remember:** Complex initialization logic goes in main `.cs` file, NOT `.designer.cs`.
 
+---
+
 ## Modern C# Features (Regular Code Only)
 
 **Apply ONLY to `.cs` files (event handlers, business logic). NEVER in `.designer.cs` or `InitializeComponent`.**
@@ -182,6 +193,50 @@ private void Button_Click(object? sender, EventArgs e)
 }
 ```
 
+### Multi-line Strings (Raw String Literals)
+
+**Critical Rules for Raw String Literals:**
+1. Opening `"""` MUST be on its own line
+2. Closing `"""` MUST be on its own line  
+3. Content starts at column 0 (the closing `"""` determines indentation)
+4. NO characters allowed after opening/closing `"""` on same line
+
+```csharp
+   string multilineString = 
+    """
+    This is a multiline string.
+    All lines here have no leading whitespace/trivia.
+    """;
+```
+
+### XML Comments
+
+- When generating code, always include XML comments for all public types and members, unless explicitly instructed otherwise.
+- This includes the scopes public, internal, protected, and protected internal.
+- Always maintain an indentation level of 1 space:
+```csharp
+/// <summary>
+///  Represents a custom control for data entry.
+/// </summary>
+/// <remarks>
+///  <para>
+///   This control provides enhanced validation and formatting capabilities.
+///  </para>
+///  <para>
+///   Use the <see cref="Validate"/> method to trigger validation manually.
+///  </para>
+/// </remarks>
+public class CustomDataControl : Control
+{
+    /// <summary>
+    ///  Gets or sets the display format for the data.
+    /// </summary>
+    /// <value>
+    ///  A format string compatible with <see cref="string.Format"/>.
+    /// </value>
+    public string DisplayFormat { get; set; } = "{0}";
+}
+```
 ## Form/UserControl Creation
 
 ### File Structure
@@ -208,6 +263,15 @@ private void Button_Click(object? sender, EventArgs e)
 - If constructor needed, include `InitializeComponent()` call
 - `Friend WithEvents` for control fields
 - Prefer `Handles` clause in main code file over `AddHandler` in `InitializeComponent` for designed controls
+
+### DI/IServiceProvider Pattern (.NET 9+, Optional)
+
+**Only when explicitly asked for DI scenarios:**
+
+No code other than `InitializeComponent()` in main code file constructor!
+Place required additional initialization code in `OnControlCreated` instead of constructor.
+
+---
 
 ## Data Binding (.NET 7+)
 
@@ -287,6 +351,8 @@ private void PrincipleApproachForIValueConverterWorkaround()
 }
 ```
 
+---
+
 ## WinForms Async Patterns (.NET 9+)
 
 ### Control.InvokeAsync Overload Selection
@@ -320,40 +386,49 @@ await InvokeAsync<string>(async (ct) => await LoadDataAsync(ct), outerCancellati
 - `async void` event handlers are the standard pattern for WinForms UI events when striving for desired asynch implementation. 
 - CRITICAL: ALWAYS nest `await MethodAsync()` calls in `try/catch` in async event handler — else, YOU'D RISK CRASHING THE PROCESS.
 
-#### Exception marshaling with `ConfigureAwait(false)`
+## Exception Handling in WinForms
 
-When the continuation runs off the UI thread, exceptions won't hit `Application.ThreadException`. 
-- In that case: marshall back like so:
+### Application-Level Exception Handling
+
+WinForms provides two primary mechanisms for handling unhandled exceptions:
+
+**AppDomain.CurrentDomain.UnhandledException:**
+- Catches exceptions from any thread in the AppDomain
+- Cannot prevent application termination
+- Use for logging critical errors before shutdown
+
+**Application.ThreadException:**
+- Catches exceptions on the UI thread only
+- Can prevent application crash by handling the exception
+- Use for graceful error recovery in UI operations
+
+### Exception Dispatch in Async/Await Context
+
+When preserving stack traces while re-throwing exceptions in async contexts:
 
 ```csharp
-protected override async void OnLoad(EventArgs e)
+try
 {
-    base.OnLoad(e);
-    SynchronizationContext? uiCtx = SynchronizationContext.Current;
-
-    try
+    await SomeAsyncOperation();
+}
+catch (Exception ex)
+{
+    if (ex is OperationCanceledException)
     {
-        await FooAsync().ConfigureAwait(false);
+        // Handle cancellation
     }
-    catch (Exception ex)
+    else
     {
-        ExceptionDispatchInfo edi = ExceptionDispatchInfo.Capture(ex);
-        if (uiCtx is not null)
-        {
-            uiCtx.Post(_ => Application.OnThreadException(edi.SourceException), null);
-        }
-        else
-        {
-            edi.Throw();
-        }
+        ExceptionDispatchInfo.Capture(ex).Throw();
     }
 }
 ```
 
+**Important Notes:**
 - `Application.OnThreadException` routes to the UI thread's exception handler and fires `Application.ThreadException`. 
-- Never call it from background threads — marshal first.
+- Never call it from background threads — marshal to UI thread first.
 - For process termination on unhandled exceptions, use `Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException)` at startup.
-- Remember: VB cannot await in catch block. Avoid, or work around with state machine.
+- **VB Limitation:** VB cannot await in catch block. Avoid, or work around with state machine pattern.
 
 ## CRITICAL: Manage CodeDOM Serialization
 
@@ -395,55 +470,68 @@ public class CustomControl : Control
 
 **Important:** Use exactly ONE of the above approaches per property for types derived from `Component` or `Control`.
 
+---
+
 ## WinForms Design Principles
 
 ### Core Rules
 
-- Use standard WinForms controls, except where stated otherwise
-- Be DarkMode aware in .NET 9+ 
-  - Only SystemColors values adapt automatically - when you adapt e.g. DataGridView for DarkMode, do not use SystemColors.
-  - Query DarkMode: `Application.IsDarkModeEnabled`
-  - Owner-draw controls, custom content painting, and DataGridView theming need customizing
-- Use owner-draw/custom rendering if other approaches would require hacks
-
 **Scaling and DPI:**
-- Use adequate margins/padding; prefer TableLayoutPanel/FlowLayoutPanel over absolute positioning
-- New Forms/UserControls: Assume 96 DPI/100% for `AutoScaleMode` and scaling
-- Existing Forms: Leave as-is, but take scaling for location/size into account
+- Use adequate margins/padding; prefer TableLayoutPanel (TLP)/FlowLayoutPanel (FLP) over absolute positioning of controls.
+- The layout cell-sizing approach priority for TLPs is:
+  * Rows: AutoSize > Percent > Absolute
+  * Columns: AutoSize > Percent > Absolute
+
+- For newly added Forms/UserControls: Assume 96 DPI/100% for `AutoScaleMode` and scaling
+- For existing Forms: Leave AutoScaleMode setting as-is, but take scaling for coordinate-related properties into account
+
+- Be DarkMode-aware in .NET 9+ - Query current DarkMode status: `Application.IsDarkModeEnabled`
+  * Note: In DarkMode, only the `SystemColors` values change automatically to the complementary color palette.
+
+- Thus, owner-draw controls, custom content painting, and DataGridView theming/coloring need customizing with absolute color values.
 
 ### Layout Strategy
 
 **Divide and conquer:**
-- Use multiple or nested TableLayoutPanels for logical sections
-- Never cram everything into one mega-grid
-- Main form uses outer TLP with rows for major sections
-- Each section gets its own nested TLP
+- Use multiple or nested TLPs for logical sections - don't cram everything into one mega-grid.
+- Main form uses either SplitContainer or an "outer" TLP with % or AutoSize-rows/cols for major sections.
+- Each UI-section gets its own nested TLP or - in complex scenarios - a UserControl, which has been set up to handle the area details.
 
 **Keep it simple:**
 - Individual TLPs should be 2-4 columns max
-- Only the rows needed for that section
-- Mix with Panels, GroupBoxes, or FlowLayoutPanel where TLP is overkill
+- Use GroupBoxes with nested TLPs to ensure clear visual grouping.
+- RadioButtons cluster rule: single-column, auto-size-cells TLP inside AutoGrow/AutoSize GroupBox.
+- Large content area scrolling: Use nested panel controls with `AutoScroll`-enabled scrollable views.
 
-**Sizing rules:**
-- AutoSize for label columns
-- Percent (100%) for control columns to fill remaining space
-- Absolute only for fixed-height rows (buttons, headers)
-- Margins matter: Set Margin on controls (default 3px), not Padding on TLP
+**Sizing rules: TLP cell fundamentals**
+- Columns:
+  * AutoSize for caption columns with `Anchor = Left | Right`.
+  * Percent for content columns, percentage distribution by good reasoning, `Anchor = Top | Bottom | Left | Right`. 
+    Never dock cells, always anchor!
+  * Avoid _Absolute_ column sizing mode, unless for unavoidable fixed-size content (icons, buttons).
+- Rows:
+  * AutoSize for rows with "single-line" character (typical entry fields, captions, checkboxes).
+  * Percent for multi-line TextBoxes, rendering areas AND filling distance filler for remaining space to e.g., a bottom button row (OK|Cancel).
+  * Avoid _Absolute_ row sizing mode even more.
 
-### Label/TextBox Pattern
+- Margins matter: Set `Margin` on controls (min. default 3px). 
+- Note: `Padding` does not have an effect in TLP cells.
 
-**Single-line TextBox (2-column TLP):**
+### Common Layout Patterns
+
+#### Single-line TextBox (2-column TLP)
+**Most common data entry pattern:**
 - Label column: AutoSize width
 - TextBox column: 100% Percent width
 - Label: `Anchor = Left | Right` (vertically centers with TextBox)
 - TextBox: `Dock = Fill`, set `Margin` (e.g., 3px all sides)
 
-**Multi-line TextBox - Option A (2-column TLP):**
+#### Multi-line TextBox or Larger Custom Content - Option A (2-column TLP)
 - Label in same row, `Anchor = Top | Left`
 - TextBox: `Dock = Fill`, set `Margin`
 - Row height: AutoSize or Percent to size the cell (cell sizes the TextBox)
 
-**Multi-line TextBox - Option B (1-column TLP, separate rows):**
+#### Multi-line TextBox or Larger Custom Content - Option B (1-column TLP, separate rows)
 - Label in dedicated row above TextBox
 - Label: `Dock = Fill` or `Anchor = Left`
 - TextBox in next row: `Dock = Fill`, set `Margin`
@@ -451,7 +539,7 @@ public class CustomControl : Control
 
 **Critical:** For multi-line TextBox, the TLP cell defines the size, not the TextBox's content.
 
-### Container Sizing (CRITICAL - prevents clipping)
+### Container Sizing (CRITICAL - Prevents Clipping)
 
 **For GroupBox/Panel inside TLP cells:**
 - MUST set `AutoSize = true` and `AutoSizeMode = GrowOnly`
@@ -465,48 +553,34 @@ public class CustomControl : Control
 
 **Pattern A - Bottom-right buttons (standard for OK/Cancel):**
 - Place buttons in FlowLayoutPanel: `FlowDirection = RightToLeft`
+- Keep additional Percentage Filler-Row between buttons and content.
 - FLP goes in bottom row of main TLP
-- Bottom row: Absolute height (35-40px)
-- FLP: `Dock = Right`, `Anchor = Right | Bottom`
-- Visual order: [OK] [Cancel]
-- Add adequate top margin to separate from main content
+- Visual order of buttons: [OK] (left) [Cancel] (right)
 
 **Pattern B - Top-right stacked buttons (wizards/browsers):**
 - Place buttons in FlowLayoutPanel: `FlowDirection = TopDown`
 - FLP in dedicated rightmost column of main TLP
-- Column: AutoSize width
-- FLP: `Dock = Top`, `Anchor = Top | Right`
+- Column: AutoSize
+- FLP: `Anchor = Top | Right`
 - Order: [OK] above [Cancel]
-- Buttons: consistent width (e.g., 75px)
 
 **When to use:**
 - Pattern A: Data entry dialogs, settings, confirmations
 - Pattern B: Multi-step wizards, navigation-heavy dialogs
 
-**Note:** If layout already has working button placement, do not change unless requested.
-
 ### Complex Layouts
 
-- For VERY complex layouts, create UserControls with TabPage content
-- One UserControl per TabPage keeps Designer code manageable
-
-### Reference Layout Structure
-
-```
-Parent TLP (3 rows):
-  Row 0 (AutoSize): TLP with 2 cols (AutoSize | 100%) - label/control pairs
-  Row 1 (AutoSize): TLP with 3 cols (33%|33%|34%) - multi-column controls  
-  Row 2 (40px Absolute): FlowLayoutPanel with right-aligned buttons
-```
+- For complex layouts, consider creating dedicated UserControls for logical sections.
+- Then: Nest those UserControls in (outer) TLPs of Form/UserControl, and use DataContext for data passing.
+- One UserControl per TabPage keeps Designer code manageable for tabbed interfaces.
 
 ### Modal Dialogs
 
 | Aspect | Rule |
 |--------|------|
-| Dialog buttons | Set `AcceptButton` and `CancelButton` |
-| Validation | Never block focus with `CancelEventArgs.Cancel = true` |
-| Close strategy | Set `DialogResult` to close |
-| Validation scope | Validate entire dialog in `OnFormClosing`; cancel close if invalid |
+| Dialog buttons | Order -> Primary (OK): `AcceptButton`, `DialogResult = OK` / Secondary (Cancel): `CancelButton`, `DialogResult = Cancel` |
+| Close strategy | `DialogResult` gets applied by DialogResult implicitly, no need for additional code |
+| Validation | Perform on _Form_, not on Field scope. Never block focus-change with `CancelEventArgs.Cancel = true` |
 
 Use `DataContext` property (.NET 7+) of Form to pass and return modal data objects.
 
@@ -515,15 +589,13 @@ Use `DataContext` property (.NET 7+) of Form to pass and return modal data objec
 | Form Type | Structure |
 |-----------|-----------|
 | MainForm | MenuStrip, optional ToolStrip, content area, StatusStrip |
-| Simple Form | Inputs on left, buttons column on right. Set meaningful `MinimumSize` for modals |
-| Tabs | Only for distinct tasks. Minimal count, short labels |
-| Grouping | `GroupBox` for related inputs |
-| Forms with a) large amounts of data entry fields or b) large canvas for rendering content | Nest container controls and use `AutoScroll` |
+| Simple Entry Form | Data entry fields on largely left side, just a buttons column on right. Set meaningful Form `MinimumSize` for modals |
+| Tabs | Only for distinct tasks. Keep minimal count, short tab labels |
 
 ### Accessibility
 
 - CRITICAL: Set `AccessibleName` and `AccessibleDescription` on actionable controls
-- Maintain logical tab order via `TabIndex` (A11Y follows control addition order)
+- Maintain logical control tab order via `TabIndex` (A11Y follows control addition order)
 - Verify keyboard-only navigation, unambiguous mnemonics, and screen reader compatibility
 
 ### TreeView and ListView
@@ -540,15 +612,22 @@ Use `DataContext` property (.NET 7+) of Form to pass and return modal data objec
 
 - Prefer derived class with double buffering enabled
 - Configure colors when in DarkMode!
-- Large data: page or virtualize (`VirtualMode=True` with `CellValueNeeded`)
+- Large data: page/virtualize (`VirtualMode = True` with `CellValueNeeded`)
 
-### Resources and Localisation
+### Resources and Localization
 
-- Coded string literals for UI display NEED to be in resource files.
-- When laying out Forms/UserControls, take into account that localized forms might have different label lengths. 
+- String literal constants for UI display NEED to be in resource files.
+- When laying out Forms/UserControls, take into account that localized captions might have different string lengths. 
 - Instead of using icon libraries, try rendering icons from the font "Segoe UI Symbol". 
 - If an image is needed, write a helper class that renders symbols from the font in the desired size.
 
-# My Agent
+## Critical Reminders
 
-Describe what your agent does here...
+| # | Rule |
+|---|------|
+| 1 | `InitializeComponent` code serves as serialization format - more like XML, not C# |
+| 2 | Two contexts, two rule sets - designer code-behind vs regular code |
+| 3 | Validate form/control names before generating code |
+| 4 | Stick to coding style rules for `InitializeComponent` |
+| 5 | Designer files never use NRT annotations |
+| 6 | Modern C# features for regular code ONLY |
