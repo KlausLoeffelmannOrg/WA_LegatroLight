@@ -34,6 +34,7 @@ public partial class MainForm : Form
             RestoreWindowPosition();
             StartClock();
             UpdateStatusBar();
+            await LoadGroupsAndTasksAsync();
         }
         catch (Exception ex)
         {
@@ -213,6 +214,98 @@ public partial class MainForm : Form
         {
             // Silently handle cleanup errors
         }
+    }
+
+    private async Task LoadGroupsAndTasksAsync()
+    {
+        if (_dbContext is null || _currentUser is null)
+            return;
+
+        _tvwTasks.BeginUpdate();
+        _tvwTasks.Nodes.Clear();
+
+        TreeNode rootNode = new TreeNode("All Groups");
+        _tvwTasks.Nodes.Add(rootNode);
+
+        List<Group> groups = await _dbContext.Groups
+            .Where(g => g.DateDeleted == null && !g.IsHidden)
+            .OrderBy(g => g.OrderNo)
+            .ToListAsync();
+
+        foreach (Group group in groups)
+        {
+            string nodeText = group.GroupSymbol is not null 
+                ? $"{group.GroupSymbol} {group.GroupDisplayName}" 
+                : group.GroupDisplayName;
+            
+            TreeNode groupNode = new TreeNode(nodeText);
+            groupNode.Tag = group;
+            rootNode.Nodes.Add(groupNode);
+
+            List<TodoTask> tasks = await GetTasksForGroupAsync(group);
+
+            foreach (TodoTask task in tasks)
+            {
+                TreeNode taskNode = new TreeNode(task.DisplayName);
+                taskNode.Tag = task;
+                groupNode.Nodes.Add(taskNode);
+            }
+
+            if (tasks.Count == 0)
+            {
+                TreeNode emptyNode = new TreeNode("(No tasks)");
+                emptyNode.ForeColor = Color.Gray;
+                groupNode.Nodes.Add(emptyNode);
+            }
+        }
+
+        rootNode.Expand();
+        _tvwTasks.EndUpdate();
+    }
+
+    private async Task<List<TodoTask>> GetTasksForGroupAsync(Group group)
+    {
+        if (_dbContext is null || _currentUser is null)
+            return new List<TodoTask>();
+
+        List<TodoTask> tasks = new List<TodoTask>();
+
+        if (group.AutoRangeSpan.HasValue)
+        {
+            DateTime startDate = DateTime.UtcNow.Date.AddDays(-(group.AutoRangeSpan.Value.Days - 1));
+            
+            if (group.AutoRangeOffset.HasValue)
+            {
+                startDate = startDate.AddDays(group.AutoRangeOffset.Value);
+            }
+
+            tasks = await _dbContext.TodoTasks
+                .Where(t => t.DateDeleted == null 
+                    && t.IDUser == _currentUser.IDUser
+                    && t.DateCreated >= startDate
+                    && t.DateFinished == null)
+                .OrderBy(t => t.DisplayName)
+                .ToListAsync();
+        }
+        else
+        {
+            List<Guid> taskIds = await _dbContext.TasksGroupsRelations
+                .Where(r => r.IDGroup == group.IDGroup && r.DateDeleted == null)
+                .Select(r => r.IDTodoTask)
+                .ToListAsync();
+
+            if (taskIds.Count > 0)
+            {
+                tasks = await _dbContext.TodoTasks
+                    .Where(t => taskIds.Contains(t.IDTodoTask) 
+                        && t.DateDeleted == null
+                        && t.DateFinished == null)
+                    .OrderBy(t => t.DisplayName)
+                    .ToListAsync();
+            }
+        }
+
+        return tasks;
     }
 
     private void MenuFileQuit_Click(object? sender, EventArgs e)
