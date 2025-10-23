@@ -160,6 +160,7 @@ partial class MainForm
         _tvwTasks.Location = new Point(3, 3);
         _tvwTasks.Name = "_tvwTasks";
         _tvwTasks.Size = new Size(294, 746);
+        _tvwTasks.AfterSelect += TvwTasks_AfterSelect;
         
         _splitMain.Panel1.Controls.Add(_tvwTasks);
         _splitMain.Panel1.Padding = new Padding(3);
@@ -172,9 +173,11 @@ partial class MainForm
         _splitRight.SplitterDistance = 450;
         _splitRight.SplitterWidth = 6;
         
+        _panelTaskDetails.AutoScroll = true;
         _panelTaskDetails.Dock = DockStyle.Fill;
         _panelTaskDetails.Location = new Point(0, 0);
         _panelTaskDetails.Name = "_panelTaskDetails";
+        _panelTaskDetails.Padding = new Padding(10);
         _panelTaskDetails.Size = new Size(888, 450);
         
         _lblGroupTitle.AutoSize = true;
@@ -184,11 +187,61 @@ partial class MainForm
         _lblGroupTitle.Size = new Size(150, 25);
         _lblGroupTitle.Text = "Task Details";
         
+        _grpTaskDetails = new GroupBox();
+        _grpTaskDetails.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        _grpTaskDetails.Location = new Point(10, 45);
+        _grpTaskDetails.Name = "_grpTaskDetails";
+        _grpTaskDetails.Size = new Size(850, 200);
+        _grpTaskDetails.Text = "Task Information";
+        _grpTaskDetails.Padding = new Padding(10);
+        
+        _txtTaskInfo = new TextBox();
+        _txtTaskInfo.Dock = DockStyle.Fill;
+        _txtTaskInfo.Location = new Point(10, 26);
+        _txtTaskInfo.Multiline = true;
+        _txtTaskInfo.Name = "_txtTaskInfo";
+        _txtTaskInfo.ReadOnly = true;
+        _txtTaskInfo.ScrollBars = ScrollBars.Vertical;
+        _txtTaskInfo.Size = new Size(830, 164);
+        
+        _grpTaskDetails.Controls.Add(_txtTaskInfo);
+        
+        _grpNewTask = new GroupBox();
+        _grpNewTask.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        _grpNewTask.Location = new Point(10, 255);
+        _grpNewTask.Name = "_grpNewTask";
+        _grpNewTask.Size = new Size(850, 120);
+        _grpNewTask.Text = "New Task";
+        _grpNewTask.Padding = new Padding(10);
+        
+        _txtNewTask = new TextBox();
+        _txtNewTask.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        _txtNewTask.Location = new Point(10, 26);
+        _txtNewTask.Multiline = true;
+        _txtNewTask.Name = "_txtNewTask";
+        _txtNewTask.Size = new Size(730, 74);
+        _txtNewTask.TextChanged += TxtNewTask_TextChanged;
+        
+        _btnAddTask = new Button();
+        _btnAddTask.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        _btnAddTask.Enabled = false;
+        _btnAddTask.Location = new Point(746, 26);
+        _btnAddTask.Name = "_btnAddTask";
+        _btnAddTask.Size = new Size(94, 74);
+        _btnAddTask.Text = "Add";
+        _btnAddTask.Click += BtnAddTask_Click;
+        
+        _grpNewTask.Controls.Add(_txtNewTask);
+        _grpNewTask.Controls.Add(_btnAddTask);
+        
         _panelTaskDetails.Controls.Add(_lblGroupTitle);
+        _panelTaskDetails.Controls.Add(_grpTaskDetails);
+        _panelTaskDetails.Controls.Add(_grpNewTask);
         
         _panelTimeTracking.Dock = DockStyle.Fill;
         _panelTimeTracking.Location = new Point(0, 0);
         _panelTimeTracking.Name = "_panelTimeTracking";
+        _panelTimeTracking.Padding = new Padding(10);
         _panelTimeTracking.Size = new Size(888, 290);
         
         _lblTimeTracking.AutoSize = true;
@@ -198,7 +251,16 @@ partial class MainForm
         _lblTimeTracking.Size = new Size(120, 21);
         _lblTimeTracking.Text = "Time Tracking";
         
+        _dgvTimeEntries = new DataGridView();
+        _dgvTimeEntries.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        _dgvTimeEntries.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        _dgvTimeEntries.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        _dgvTimeEntries.Location = new Point(10, 40);
+        _dgvTimeEntries.Name = "_dgvTimeEntries";
+        _dgvTimeEntries.Size = new Size(868, 240);
+        
         _panelTimeTracking.Controls.Add(_lblTimeTracking);
+        _panelTimeTracking.Controls.Add(_dgvTimeEntries);
         
         _splitRight.Panel1.Controls.Add(_panelTaskDetails);
         _splitRight.Panel2.Controls.Add(_panelTimeTracking);
@@ -260,6 +322,12 @@ partial class MainForm
     private SplitContainer _splitRight;
     private Panel _panelTaskDetails;
     private Label _lblGroupTitle;
+    private GroupBox _grpTaskDetails;
+    private TextBox _txtTaskInfo;
+    private GroupBox _grpNewTask;
+    private TextBox _txtNewTask;
+    private Button _btnAddTask;
     private Panel _panelTimeTracking;
     private Label _lblTimeTracking;
+    private DataGridView _dgvTimeEntries;
 }
