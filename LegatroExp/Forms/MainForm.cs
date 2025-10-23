@@ -275,6 +275,11 @@ public partial class MainForm : Form
 
     private void MnuToolsOptions_Click(object? sender, EventArgs e)
     {
-        MessageBox.Show("Options dialog not yet implemented.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        using OptionsForm optionsForm = new(_settings);
+
+        if (optionsForm.ShowDialog(this) == DialogResult.OK)
+        {
+            Font = new Font(_settings.BaseFont, 11F);
+        }
     }
 }
