@@ -1,5 +1,4 @@
-
-# WinForms Agent Development Guidelines
+# WinForms Expert Agent.
 
 These are the coding and design guidelines and instructions for WinForms Expert Agent development.
 When customer asks/requests will require the creation of new projects
