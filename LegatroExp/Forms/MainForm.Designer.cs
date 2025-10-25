@@ -94,6 +94,10 @@ partial class MainForm
         _quitToolStripMenuItem.Text = "&Quit";
         _quitToolStripMenuItem.Click += QuitToolStripMenuItem_Click;
 
+        // Wire up File menu handlers
+        _newSolutionToolStripMenuItem.Click += NewSolutionToolStripMenuItem_Click;
+        _openSolutionToolStripMenuItem.Click += OpenSolutionToolStripMenuItem_Click;
+
         // _editToolStripMenuItem
         _editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {
             _groupsToolStripMenuItem,

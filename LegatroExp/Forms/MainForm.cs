@@ -227,6 +227,136 @@ public partial class MainForm : Form
         Close();
     }
 
+    private async void NewSolutionToolStripMenuItem_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            using SaveFileDialog saveDialog = new()
+            {
+                Title = "Create New Legatro Solution",
+                Filter = "Legatro Files (*.legatro)|*.legatro|All Files (*.*)|*.*",
+                FilterIndex = 1,
+                DefaultExt = "legatro",
+                AddExtension = true,
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+
+            if (saveDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                string newDbPath = saveDialog.FileName;
+                
+                // Check if file already exists
+                if (File.Exists(newDbPath))
+                {
+                    DialogResult result = MessageBox.Show(
+                        "A database file already exists at this location. Do you want to replace it?",
+                        "File Exists",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+                    
+                    if (result != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                    
+                    File.Delete(newDbPath);
+                }
+
+                // Create new database
+                await _databaseService.CreateNewDatabaseAsync(newDbPath);
+                
+                // Update settings
+                _settingsService.Settings.LastDatabasePath = newDbPath;
+                _settingsService.SaveSettings();
+                
+                // Reload the UI
+                _statusLabelDatabase.Text = $"Database: {Path.GetFileNameWithoutExtension(newDbPath)}";
+                _statusLabelSpring.Text = "New database created successfully";
+                _statusLabelSpring.ForeColor = Color.Green;
+                
+                LoadGroupsAndTasks();
+                
+                MessageBox.Show(
+                    "New database created successfully!",
+                    "Success",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            _statusLabelSpring.Text = $"Error: {ex.Message}";
+            _statusLabelSpring.ForeColor = Color.Red;
+            
+            MessageBox.Show(
+                $"Failed to create new database: {ex.Message}",
+                "Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
+    private async void OpenSolutionToolStripMenuItem_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            using OpenFileDialog openDialog = new()
+            {
+                Title = "Open Legatro Solution",
+                Filter = "Legatro Files (*.legatro)|*.legatro|All Files (*.*)|*.*",
+                FilterIndex = 1,
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+            };
+
+            if (openDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                string dbPath = openDialog.FileName;
+                
+                // Verify file exists
+                if (!File.Exists(dbPath))
+                {
+                    MessageBox.Show(
+                        "The selected database file does not exist.",
+                        "File Not Found",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+
+                // Open the database
+                await _databaseService.OpenDatabaseAsync(dbPath);
+                
+                // Update settings
+                _settingsService.Settings.LastDatabasePath = dbPath;
+                _settingsService.SaveSettings();
+                
+                // Reload the UI
+                _statusLabelDatabase.Text = $"Database: {Path.GetFileNameWithoutExtension(dbPath)}";
+                _statusLabelSpring.Text = "Database opened successfully";
+                _statusLabelSpring.ForeColor = Color.Green;
+                
+                LoadGroupsAndTasks();
+                
+                MessageBox.Show(
+                    "Database opened successfully!",
+                    "Success",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            _statusLabelSpring.Text = $"Error: {ex.Message}";
+            _statusLabelSpring.ForeColor = Color.Red;
+            
+            MessageBox.Show(
+                $"Failed to open database: {ex.Message}",
+                "Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
     private void TvwTasks_AfterSelect(object? sender, TreeViewEventArgs e)
     {
         if (e.Node is null || e.Node.Tag is null)

@@ -269,4 +269,52 @@ public class DatabaseService
         _dbContext?.Dispose();
         _dbContext = null;
     }
+
+    /// <summary>
+    /// Creates a new database at the specified path
+    /// </summary>
+    public async System.Threading.Tasks.Task CreateNewDatabaseAsync(string newDbPath)
+    {
+        // Close current connection if any
+        Close();
+        
+        // Delete existing file if present
+        if (File.Exists(newDbPath))
+        {
+            File.Delete(newDbPath);
+        }
+
+        // Create new database
+        DbContextOptionsBuilder<LegatroDbContext> optionsBuilder = new();
+        optionsBuilder.UseSqlite($"Data Source={newDbPath}");
+
+        _dbContext = new LegatroDbContext(optionsBuilder.Options);
+        
+        await _dbContext.Database.EnsureCreatedAsync();
+        await SeedInitialDataAsync();
+    }
+
+    /// <summary>
+    /// Opens an existing database at the specified path
+    /// </summary>
+    public async System.Threading.Tasks.Task OpenDatabaseAsync(string dbPath)
+    {
+        // Close current connection if any
+        Close();
+        
+        if (!File.Exists(dbPath))
+        {
+            throw new FileNotFoundException($"Database file not found: {dbPath}");
+        }
+
+        // Open existing database
+        DbContextOptionsBuilder<LegatroDbContext> optionsBuilder = new();
+        optionsBuilder.UseSqlite($"Data Source={dbPath}");
+
+        _dbContext = new LegatroDbContext(optionsBuilder.Options);
+        
+        // Ensure database is accessible
+        await _dbContext.Database.OpenConnectionAsync();
+        await _dbContext.Database.CloseConnectionAsync();
+    }
 }
