@@ -88,6 +88,22 @@ public partial class MainForm : Form
         }
 
         _settingsService.SaveSettings();
+
+        // Create backup if enabled
+        if (_settingsService.Settings.AutoBackupEnabled)
+        {
+            try
+            {
+                _databaseService.CreateBackup();
+                _statusLabelSpring.Text = "Backup created successfully";
+                _statusLabelSpring.ForeColor = Color.Green;
+            }
+            catch (Exception ex)
+            {
+                _statusLabelSpring.Text = $"Backup failed: {ex.Message}";
+                _statusLabelSpring.ForeColor = Color.Red;
+            }
+        }
     }
 
     private void Timer_Tick(object? sender, EventArgs e)
@@ -138,11 +154,27 @@ public partial class MainForm : Form
                 
                 foreach (Data.Entities.Task task in groupTasks)
                 {
-                    TreeNode taskNode = new(task.DisplayName)
+                    string taskText = FormatTaskNodeText(task);
+                    TreeNode taskNode = new(taskText)
                     {
                         Name = $"task_{task.IDTask}",
                         Tag = task
                     };
+                    
+                    // Set node color based on task status
+                    if (task.DateFinished.HasValue)
+                    {
+                        taskNode.ForeColor = Color.Green; // Completed
+                    }
+                    else if (task.DueDate.HasValue && task.DueDate.Value < DateTime.UtcNow)
+                    {
+                        taskNode.ForeColor = Color.Red; // Overdue
+                    }
+                    else if (task.TimeSpent > TimeSpan.Zero)
+                    {
+                        taskNode.ForeColor = Color.Blue; // In progress
+                    }
+                    
                     groupNode.Nodes.Add(taskNode);
                 }
             }
@@ -220,6 +252,33 @@ public partial class MainForm : Form
         }
         
         return (task.TimeSpent.TotalHours / task.EstimatedEffort.Value.TotalHours) * 100;
+    }
+
+    private string FormatTaskNodeText(Data.Entities.Task task)
+    {
+        string prefix = "";
+        
+        if (task.DateFinished.HasValue)
+        {
+            prefix = "✓ "; // Completed
+        }
+        else if (task.DueDate.HasValue && task.DueDate.Value < DateTime.UtcNow)
+        {
+            prefix = "⚠ "; // Overdue
+        }
+        else if (task.TimeSpent > TimeSpan.Zero)
+        {
+            prefix = "▶ "; // In progress
+        }
+        
+        string dueInfo = "";
+        if (task.DueDate.HasValue && !task.DateFinished.HasValue)
+        {
+            DateTime localDue = task.DueDate.Value.ToLocalTime();
+            dueInfo = $" (Due: {localDue:MM/dd})";
+        }
+        
+        return $"{prefix}{task.DisplayName}{dueInfo}";
     }
 
     private void QuitToolStripMenuItem_Click(object? sender, EventArgs e)
