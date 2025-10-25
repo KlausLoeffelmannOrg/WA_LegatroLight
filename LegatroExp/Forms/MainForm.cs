@@ -89,20 +89,20 @@ public partial class MainForm : Form
 
         _settingsService.SaveSettings();
 
-        // Create backup if enabled
+        // Create backup asynchronously if enabled (non-blocking)
         if (_settingsService.Settings.AutoBackupEnabled)
         {
-            try
+            System.Threading.Tasks.Task.Run(() =>
             {
-                _databaseService.CreateBackup();
-                _statusLabelSpring.Text = "Backup created successfully";
-                _statusLabelSpring.ForeColor = Color.Green;
-            }
-            catch (Exception ex)
-            {
-                _statusLabelSpring.Text = $"Backup failed: {ex.Message}";
-                _statusLabelSpring.ForeColor = Color.Red;
-            }
+                try
+                {
+                    _databaseService.CreateBackup();
+                }
+                catch
+                {
+                    // Silently fail during shutdown - don't block the close
+                }
+            });
         }
     }
 
@@ -162,18 +162,14 @@ public partial class MainForm : Form
                     };
                     
                     // Set node color based on task status
-                    if (task.DateFinished.HasValue)
+                    TaskStatus status = GetTaskStatus(task);
+                    taskNode.ForeColor = status switch
                     {
-                        taskNode.ForeColor = Color.Green; // Completed
-                    }
-                    else if (task.DueDate.HasValue && task.DueDate.Value < DateTime.UtcNow)
-                    {
-                        taskNode.ForeColor = Color.Red; // Overdue
-                    }
-                    else if (task.TimeSpent > TimeSpan.Zero)
-                    {
-                        taskNode.ForeColor = Color.Blue; // In progress
-                    }
+                        TaskStatus.Completed => Color.Green,
+                        TaskStatus.Overdue => Color.Red,
+                        TaskStatus.InProgress => Color.Blue,
+                        _ => taskNode.ForeColor // Default color
+                    };
                     
                     groupNode.Nodes.Add(taskNode);
                 }
@@ -244,6 +240,34 @@ public partial class MainForm : Form
         };
     }
 
+    private enum TaskStatus
+    {
+        NotStarted,
+        InProgress,
+        Completed,
+        Overdue
+    }
+
+    private TaskStatus GetTaskStatus(Data.Entities.Task task)
+    {
+        if (task.DateFinished.HasValue)
+        {
+            return TaskStatus.Completed;
+        }
+        
+        if (task.DueDate.HasValue && task.DueDate.Value < DateTime.UtcNow)
+        {
+            return TaskStatus.Overdue;
+        }
+        
+        if (task.TimeSpent > TimeSpan.Zero)
+        {
+            return TaskStatus.InProgress;
+        }
+        
+        return TaskStatus.NotStarted;
+    }
+
     private double CalculatePercentDone(Data.Entities.Task task)
     {
         if (!task.EstimatedEffort.HasValue || task.EstimatedEffort.Value.TotalHours == 0)
@@ -256,20 +280,14 @@ public partial class MainForm : Form
 
     private string FormatTaskNodeText(Data.Entities.Task task)
     {
-        string prefix = "";
-        
-        if (task.DateFinished.HasValue)
+        TaskStatus status = GetTaskStatus(task);
+        string prefix = status switch
         {
-            prefix = "✓ "; // Completed
-        }
-        else if (task.DueDate.HasValue && task.DueDate.Value < DateTime.UtcNow)
-        {
-            prefix = "⚠ "; // Overdue
-        }
-        else if (task.TimeSpent > TimeSpan.Zero)
-        {
-            prefix = "▶ "; // In progress
-        }
+            TaskStatus.Completed => "✓ ",
+            TaskStatus.Overdue => "⚠ ",
+            TaskStatus.InProgress => "▶ ",
+            _ => ""
+        };
         
         string dueInfo = "";
         if (task.DueDate.HasValue && !task.DateFinished.HasValue)
