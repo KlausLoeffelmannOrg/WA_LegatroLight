@@ -568,4 +568,80 @@ public partial class MainForm : Form
         public string EndTime { get; set; } = string.Empty;
         public string Duration { get; set; } = string.Empty;
     }
+
+    private void TxtNewTask_TextChanged(object? sender, EventArgs e)
+    {
+        _btnAddTask.Enabled = !string.IsNullOrWhiteSpace(_txtNewTask.Text);
+    }
+
+    private async void BtnAddTask_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            string taskName = _txtNewTask.Text.Trim();
+            if (string.IsNullOrWhiteSpace(taskName))
+            {
+                return;
+            }
+
+            // Get current user
+            Data.Entities.User? currentUser = _databaseService.DbContext.Users
+                .FirstOrDefault(u => u.DateDeleted == null);
+
+            if (currentUser is null)
+            {
+                MessageBox.Show(
+                    "No user found in database. Please restart the application.",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            // Get default project
+            Data.Entities.Project? defaultProject = _databaseService.DbContext.Projects
+                .FirstOrDefault(p => p.IsSystem && p.DateDeleted == null);
+
+            if (defaultProject is null)
+            {
+                MessageBox.Show(
+                    "No default project found in database.",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            // Create new task
+            Data.Entities.Task newTask = new()
+            {
+                DisplayName = taskName,
+                IDUser = currentUser.IDUser,
+                IDProject = defaultProject.IDProject
+            };
+
+            _databaseService.DbContext.Tasks.Add(newTask);
+            await _databaseService.DbContext.SaveChangesAsync();
+
+            // Clear the textbox
+            _txtNewTask.Clear();
+
+            // Reload tasks
+            LoadGroupsAndTasks();
+
+            _statusLabelSpring.Text = $"Task '{taskName}' created successfully";
+            _statusLabelSpring.ForeColor = Color.Green;
+        }
+        catch (Exception ex)
+        {
+            _statusLabelSpring.Text = $"Error: {ex.Message}";
+            _statusLabelSpring.ForeColor = Color.Red;
+
+            MessageBox.Show(
+                $"Failed to create task: {ex.Message}",
+                "Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
 }
