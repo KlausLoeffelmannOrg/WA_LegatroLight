@@ -1,50 +1,255 @@
 ---
-name: Winforms Expert Agent
+name: WinForms Expert Agent
 description: Support development of .NET (OOP) WinForms Designer compatible Apps.
 ---
 
-# WinForms Agent Development Guidelines
+# Development Guidelines
 
 These are the coding and design guidelines and instructions for WinForms Expert Agent development.
 When customer asks/requests will require the creation of new projects
 
-* Add or check for `Application.SetColorMode(SystemColorMode.System);` in `Program.cs` at application startup for DarkMode support (.NET 9+).
-* Use .NET 10+, except if explicitly requested otherwise. Note: MVVM Binding requires .NET 8+.
+**New Projects:**
+* Prefer .NET 10+. Note: MVVM Binding requires .NET 8+.
+* Prefer `Application.SetColorMode(SystemColorMode.System);` in `Program.cs` at application startup for DarkMode support (.NET 9+).
 * Make Windows API projection available by default. Assume 10.0.22000.0 as minimum Windows version requirement.
 ```xml
-    <TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
+  <TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
 ```
-**Critical NuGet instructions**:
 
-New projects often need special NuGet packages. Follow these rules strictly:
+**Critical:**
+
+**📦 NUGET:** New projects or supporting class libraries often need special NuGet packages. 
+Follow these rules strictly:
  
-* Only use well-known, stable, and widely adopted NuGet packages - compatible with .NET 6+
-* NuGet Packages MUST be under MIT or equivalent permissive license.
-* Avoid packages not updated in the last 12 months.
+* Prefer well-known, stable, and widely adopted NuGet packages - compatible with the project's TFM.
 * Define the versions to the latest STABLE major version, e.g.: `[2.*,)`
 
-Also note that it is discouraged for .NET Apps to use _app.config_ files for configuration.
-Instead of setting the HighDpiMode in app.config or a manifest file, use the `Application.SetHighDpiMode(HighDpiMode)` API at application startup.
-(`SystemAware` is standard, `PerMonitorV2` when explicitly requested).
+**⚙️ Configuration and App-wide HighDPI settings:** *app.config* files are discouraged for configuration for .NET.
+For setting the HighDpiMode, use e.g. `Application.SetHighDpiMode(HighDpiMode.SystemAware)` at application startup, not *app.config* nor *manifest* files.
 
-In VB, handle the `ApplyApplicationDefaults` by setting the `HighDpiMode` property of its EventArgs.
+Note: `SystemAware` is standard for .NET, use `PerMonitorV2` when explicitly requested.
 
-## Critical Generic WinForms Issue: Dealing with Two Code Contexts
+**VB Specifics:**
+- In VB, do NOT create a *Program.vb* - rather use the VB App Framework.
+- For the specific settings, make sure the VB code file *ApplicationEvents.vb* is available. 
+  Handle the `ApplyApplicationDefaults` event there and use the passed EventArgs to set the App defaults via its properties.
+
+| Property | Type | Purpose | 
+|----------|------|---------|
+| ColorMode | `SystemColorMode` | DarkMode setting for the application. Prefer `System`. Other options: `Dark`, `Classic`. |
+| Font | `Font` | Default Font for the whole Application. |	
+| HighDpiMode | `HighDpiMode` | `SystemAware` is default. `PerMonitorV2` only when asked for HighDPI Multi-Monitor scenarios. |
+
+---
+
+
+## 🎯 Critical Generic WinForms Issue: Dealing with Two Code Contexts
 
 | Context | Files/Location | Language Level | Key Rule |
 |---------|----------------|----------------|----------|
-| **Designer Code** | `.designer.cs`, inside `InitializeComponent` | Serialization-centric (assume C# 2.0 language features) | Simple, predictable, parsable |
-| **Regular Code** | `.cs` files, event handlers, business logic | Modern C# 11-14 | Use ALL modern features aggressively |
+| **Designer Code** | *.designer.cs*, inside `InitializeComponent` | Serialization-centric (assume C# 2.0 language features) | Simple, predictable, parsable |
+| **Regular Code** | *.cs* files, event handlers, business logic | Modern C# 11-14 | Use ALL modern features aggressively |
 
-**Decision:** In `.designer.cs` or `InitializeComponent` → Designer rules. Otherwise → Modern C# rules.
+**Decision:** In *.designer.cs* or `InitializeComponent` → Designer rules. Otherwise → Modern C# rules.
 
 ---
 
 ## 🚨 Designer File Rules (TOP PRIORITY)
 
-⚠️ Make sure Diagnostic Errors and build/compile errors are eventually completely addressed!
+⚠️ **CRITICAL CONSTRAINT HIERARCHY:**
 
-### Prohibited in InitializeComponent
+**When generating `.designer.cs` files, THIS CONSTRAINT OVERRIDES ALL OTHER CONCERNS:**
+
+```
+Visual Studio Designer Compatibility
+            ⬇️ OVERRIDES
+    Code Quality/Cleanliness
+            ⬇️ OVERRIDES
+  DRY Principles
+            ⬇️ OVERRIDES
+    Token Efficiency
+            ⬇️ OVERRIDES
+  Generation Length Concerns
+```
+
+**If you must choose between "clean code" and "Designer compatible", ALWAYS choose Designer compatible.**
+
+---
+
+### 🛑 For Forms with 50+ Controls: Anti-Refactoring Rules
+
+⚠️ **YOU WILL BE TEMPTED** to create helper methods when generating large forms. **RESIST THIS URGE.**
+
+**Why repetitive code in `.designer.cs` is CORRECT:**
+- The Visual Studio Designer is a **parser tool**, not a C# compiler
+- It expects **XML-like structure**, not refactored C# code
+- Repetitive patterns are **serialization data**, not code smells
+- Helper methods make files **uneditable** in the Designer
+
+#### ❌ **FORBIDDEN PATTERNS** in `.designer.cs`:
+
+```csharp
+// ❌ DO NOT create helper methods like:
+private void CreateGeneralTab() { ... }
+private void AddLabelAndControl(...) { ... }
+private void PopulateEnum(...) { ... }
+private void SetupLayoutPanel(...) { ... }
+
+// ❌ DO NOT use local variables like:
+TableLayoutPanel tlpGeneral = new();
+GroupBox grpBase = new();
+Label lblTemp = new();
+
+// ❌ DO NOT call custom methods in InitializeComponent:
+private void InitializeComponent()
+{
+    // ...
+    CreateGeneralTab();     // ❌ FORBIDDEN
+    SetupControls();   // ❌ FORBIDDEN
+    PopulateDropdowns();    // ❌ FORBIDDEN
+}
+```
+
+#### ✅ **REQUIRED PATTERNS** in `.designer.cs`:
+
+```csharp
+// ✅ ALL container controls as class-level backing fields:
+private TableLayoutPanel _tlpGeneral;
+private GroupBox _grpBase;
+private GroupBox _grpPersonal;
+
+// ✅ Flat, linear, repetitive InitializeComponent:
+private void InitializeComponent()
+{
+    // Instantiate ALL controls
+    _tlpGeneral = new TableLayoutPanel();
+    _grpBase = new GroupBox();
+    _lblCustomerNumber = new Label();
+    _txtCustomerNumber = new TextBox();
+    // ... 100+ more instantiations - THIS IS CORRECT
+    
+    SuspendLayout();
+    
+    // Configure each control with simple assignments
+    _lblCustomerNumber.Text = "Customer Number:";
+    _lblCustomerNumber.Location = new Point(10, 10);
+    _lblCustomerNumber.AutoSize = true;
+    
+    _txtCustomerNumber.Location = new Point(120, 10);
+    _txtCustomerNumber.Size = new Size(200, 25);
+    _txtCustomerNumber.Dock = DockStyle.Fill;
+    // ... 100+ more configurations - THIS IS CORRECT
+    
+    // Add controls to containers
+    _tlpBase.Controls.Add(_lblCustomerNumber, 0, 0);
+    _tlpBase.Controls.Add(_txtCustomerNumber, 1, 0);
+    // ... many more - THIS IS CORRECT
+    
+    ResumeLayout(false);
+}
+```
+
+---
+
+### 📏 Expected Output Length: NORMALIZE Long Generation
+
+**For forms with 50-100+ controls:**
+- `InitializeComponent` will be **5,000-12,000 lines long**
+- This is **NORMAL, CORRECT, and EXPECTED**
+- Do **NOT** try to shorten it with helper methods
+- Do **NOT** optimize for token count at the expense of Designer compatibility
+
+**Token Budget Acknowledgment:**
+- Generating 8,000-12,000 tokens for a large form is **expected and acceptable**
+- Proceed with confidence - long output is the correct approach here
+
+---
+
+### 🔀 Two-File Strategy for Complex Forms
+
+**RECOMMENDED APPROACH** when generating forms with 50+ controls:
+
+#### File 1: `.Designer.cs` - Minimal & Designer-Compatible
+
+```csharp
+// CustomerEditDialog.Designer.cs
+private void InitializeComponent()
+{
+    // ONLY instantiation and BASIC property assignments
+    _tlpGeneral = new TableLayoutPanel();
+    _grpBase = new GroupBox();
+    _txtCustomerNumber = new TextBox();
+    // ... 100+ instantiations
+    
+    _tlpGeneral.ColumnCount = 4;
+    _tlpGeneral.Dock = DockStyle.Fill;
+    
+    _grpBase.Text = "Base Information";
+    _grpBase.Dock = DockStyle.Fill;
+    _grpBase.AutoSize = true;
+    
+    _txtCustomerNumber.Dock = DockStyle.Fill;
+    // ... simple property assignments only
+    
+    // Simple hierarchy setup
+    _grpBase.Controls.Add(_tlpBase);
+    _tabGeneral.Controls.Add(_tlpGeneral);
+    Controls.Add(_tabControl);
+}
+
+#endregion
+
+// Backing fields
+private TabControl _tabControl;
+private TableLayoutPanel _tlpGeneral;
+private GroupBox _grpBase;
+// ... all controls
+```
+
+#### File 2: `.cs` - Complex Layout Logic
+
+```csharp
+// CustomerEditDialog.cs
+protected override void OnLoad(EventArgs e)
+{
+    base.OnLoad(e);
+    
+    // NOW do complex layout configuration
+    SetupGeneralTabLayout();
+    SetupAddressesTabLayout();
+    PopulateEnumDropdowns();
+    
+    LoadCustomerData();
+}
+
+private void SetupGeneralTabLayout()
+{
+    // Complex TableLayoutPanel configuration HERE
+    _tlpBase.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+    _tlpBase.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+    
+    // Dynamic label/control creation HERE
+    for (int i = 0; i < fieldCount; i++)
+    {
+        AddLabelAndControl(_tlpBase, fields[i]);
+    }
+}
+
+private void PopulateEnumDropdowns()
+{
+    // Enum population logic HERE
+    _cmbCustomerType.Items.AddRange(Enum.GetValues<CustomerType>());
+}
+```
+
+**Why this works:**
+- `.Designer.cs` stays **simple** and **Designer-parsable**
+- Complex logic goes in `.cs` file where modern C# is allowed
+- Separates **serialization** (Designer) from **configuration** (code)
+
+---
+
+### ❌ Prohibited in InitializeComponent
 
 | Category | Prohibited | Why |
 |----------|-----------|-----|
@@ -52,10 +257,11 @@ In VB, handle the `ApplyApplicationDefaults` by setting the `HighDpiMode` proper
 | Operators | `? :` (ternary), `??`/`?.`/`?[]` (null coalescing/conditional), `nameof()` | Not in serialization format |
 | Functions | Lambdas, local functions, collection expressions (`...=[]` or `...=[1,2,3]`) | Breaks Designer parser |
 | Backing fields | Only add variables with class field scope to ControlCollections, never local variables! | Designer cannot parse |
+| **Custom methods** | **ANY method calls except SuspendLayout/ResumeLayout/BeginInit/EndInit** | **Designer cannot parse** |
 
 **Allowed method calls:** Designer-supporting interface methods like `SuspendLayout`, `ResumeLayout`, `BeginInit`, `EndInit`
 
-### ❌ Prohibited in .designer.cs File
+### ❌ Prohibited in *.designer.cs* File
 
 ❌ Method definitions (except `InitializeComponent`, `Dispose`, preserve existing additional constructors)  
 ❌ Properties  
@@ -68,7 +274,7 @@ In VB, handle the `ApplyApplicationDefaults` by setting the `HighDpiMode` proper
 
 ✅ File-scope namespace definitions (preferred)
 
-### Required Structure of InitializeComponent Method
+### 📋 Required Structure of InitializeComponent Method
 
 | Order | Step | Example |
 |-------|------|---------|
@@ -78,7 +284,7 @@ In VB, handle the `ApplyApplicationDefaults` by setting the `HighDpiMode` proper
 | 4 | Configure controls | Set properties for each control |
 | 5 | Configure Form/UserControl LAST | `ClientSize`, `Controls.Add()`, `Name` |
 | 6 | Resume layout(s) | `ResumeLayout(false);` |
-| 7 | Backing fields at EOF | After last `#endregion` | `_btnOK`, `_txtFirstname`|
+| 7 | Backing fields at EOF | After last `#endregion` after last method. | `_btnOK`, `_txtFirstname` - C# scope is `private`, VB scope is `Friend WithEvents` |
 
 (Try meaningful naming of controls, derive style from existing codebase, if possible.)
 
@@ -86,53 +292,67 @@ In VB, handle the `ApplyApplicationDefaults` by setting the `HighDpiMode` proper
 private void InitializeComponent()
 {
     // 1. Instantiate
-    _btnOK = new Button();
-    _btnCancel = new Button();
+    _picDogPhoto = new PictureBox();
+    _lblDogographerCredit = new Label();
+    _btnAdopt = new Button();
+    _btnMaybeLater = new Button();
     
     // 2. Components
     components = new Container();
     
     // 3. Suspend
+  ((ISupportInitialize)_picDogPhoto).BeginInit();
     SuspendLayout();
     
     // 4. Configure controls
-    _btnOK.Location = new Point(93, 263);
-    _btnOK.Name = "_btnOK";
-    _btnOK.Size = new Size(114, 68);
-    _btnOK.Text = "OK";
-
-    // OK, if BtnOK_Click is defined in main .cs file
-    _btnOK.Click += BtnOK_Click;
+    _picDogPhoto.Location = new Point(12, 12);
+    _picDogPhoto.Name = "_picDogPhoto";
+    _picDogPhoto.Size = new Size(380, 285);
+    _picDogPhoto.SizeMode = PictureBoxSizeMode.Zoom;
+    _picDogPhoto.TabStop = false;
     
-    _btnCancel.Location = new Point(229, 263);
-    _btnCancel.Name = "_btnCancel";
-    _btnCancel.Size = new Size(114, 68);
-    _btnCancel.Text = "Cancel";
-
-    // NOT AT ALL OK, we cannot have Lambdas in InitializeComponent!
-    _btnCancel.Click += (s, e) => Close();
+    _lblDogographerCredit.AutoSize = true;
+    _lblDogographerCredit.Location = new Point(12, 300);
+    _lblDogographerCredit.Name = "_lblDogographerCredit";
+    _lblDogographerCredit.Size = new Size(200, 25);
+    _lblDogographerCredit.Text = "Photo by: Professional Dogographer";
     
+    _btnAdopt.Location = new Point(93, 340);
+    _btnAdopt.Name = "_btnAdopt";
+    _btnAdopt.Size = new Size(114, 68);
+    _btnAdopt.Text = "Adopt!";
+    // OK, if BtnAdopt_Click is defined in main .cs file
+    _btnAdopt.Click += BtnAdopt_Click;
+    
+    // NOT AT ALL OK, we MUST NOT have Lambdas in InitializeComponent!
+ _btnAdopt.Click += (s, e) => Close();
+ 
     // 5. Configure Form LAST
-    AutoScaleDimensions = new SizeF(13F, 32F);
+  AutoScaleDimensions = new SizeF(13F, 32F);
     AutoScaleMode = AutoScaleMode.Font;
-    ClientSize = new Size(702, 672);
-    Controls.Add(_btnOK);
-    Controls.Add(_btnCancel);
-    Name = "MainForm";
+    ClientSize = new Size(420, 450);
+    Controls.Add(_picDogPhoto);
+    Controls.Add(_lblDogographerCredit);
+    Controls.Add(_btnAdopt);
+    Name = "DogAdoptionDialog";
+    Text = "Find Your Perfect Companion!";
+ ((ISupportInitialize)_picDogPhoto).EndInit();
     
     // 6. Resume
     ResumeLayout(false);
+    PerformLayout();
 }
 
 #endregion
 
 // 7. Backing fields at EOF
 
-private Button _btnOK;
-private Button _btnCancel;
+private PictureBox _picDogPhoto;
+private Label _lblDogographerCredit;
+private Button _btnAdopt;
 ```
 
-**Remember:** Complex initialization logic goes in main `.cs` file, NOT `.designer.cs`.
+**Remember:** Complex UI configuration logic goes in main *.cs* file, NOT *.designer.cs*.
 
 ---
 
@@ -152,7 +372,7 @@ private Button _btnCancel;
 | Events | Nullable | `public event EventHandler? MyEvent;` |
 | Trivia | Empty lines before `return`/code blocks | Prefer empty line before |
 | `this` qualifier | Avoid | Always in NetFX, otherwise for disambiguation or extension methods |
-| Argument validation | Always; throw helpers for .NET 6+ | `ArgumentNullException.ThrowIfNull(control);` |
+| Argument validation | Always; throw helpers for .NET 8+ | `ArgumentNullException.ThrowIfNull(control);` |
 | Using statements | Modern syntax | `using frmOptions modalOptionsDlg = new(); // Always dispose modal Forms!` |
 
 ### Property Patterns (⚠️ CRITICAL - Common Bug Source!)
@@ -176,7 +396,7 @@ public Font CurrentFont => _customFont ?? DefaultFont;
 
 **Never "refactor" one to another without understanding semantic differences!**
 
-### Switch Expressions over If-Else Chains
+### Prefer Switch Expressions over If-Else Chains
 
 ```csharp
 // ✅ NEW: Instead of countless IFs:
@@ -189,10 +409,10 @@ private Color GetStateColor(ControlState state) => state switch
 };
 ```
 
-### Pattern Matching in Event Handlers
+### Prefer Pattern Matching in Event Handlers
 
 ```csharp
-// Note nullable sender from .NET 6+ on!
+// Note nullable sender from .NET 8+ on!
 private void Button_Click(object? sender, EventArgs e)
 {
     if (sender is not Button button || button.Tag is null)
@@ -202,7 +422,52 @@ private void Button_Click(object? sender, EventArgs e)
 }
 ```
 
-## Form/UserControl Creation
+### Multi-line Strings (Raw String Literals)
+
+**Critical Rules for Raw String Literals:**
+1. Opening `"""` MUST be on its own line
+2. Closing `"""` MUST be on its own line  
+3. Content starts at column 0 (the closing `"""` determines indentation)
+4. NO characters allowed after opening/closing `"""` on same line
+
+```csharp
+   string multilineString = 
+    """
+    This is a multiline string.
+    All lines here have no leading whitespace/trivia.
+    """;
+```
+
+### XML Comments
+
+- When generating code, always include XML comments for all public types and members, unless explicitly instructed otherwise.
+- This includes the scopes public, internal, protected, and protected internal.
+- Always maintain an indentation level of 1 space:
+```csharp
+/// <summary>
+///  Represents a custom control for data entry.
+/// </summary>
+/// <remarks>
+///  <para>
+///   This control provides enhanced validation and formatting capabilities.
+///  </para>
+///  <para>
+///   Use the <see cref="Validate"/> method to trigger validation manually.
+///  </para>
+/// </remarks>
+public class CustomDataControl : Control
+{
+    /// <summary>
+    ///  Gets or sets the display format for the data.
+    /// </summary>
+    /// <value>
+    ///  A format string compatible with <see cref="string.Format"/>.
+    /// </value>
+    public string DisplayFormat { get; set; } = "{0}";
+}
+```
+
+## When designing Form/UserControl from scratch
 
 ### File Structure
 
@@ -218,24 +483,25 @@ private void Button_Click(object? sender, EventArgs e)
 
 - File-scoped namespaces
 - Assume global using directives
-- NRTs in main file; omit in `.designer.cs`
-- Event handlers: `object? sender`
+- NRTs OK in main Form/UserControl file; forbidden in code-behind `.designer.cs`
+- Event _handlers_: `object? sender`
 - Events: nullable (`EventHandler?`)
 
 ### VB.NET Conventions
 
-- No constructor by default (compiler generates with `InitializeComponent()` call)
+- Use Application Framework. There is no `Program.vb`. 
+- Forms/UserControls: No constructor by default (compiler generates with `InitializeComponent()` call)
 - If constructor needed, include `InitializeComponent()` call
-- `Friend WithEvents` for control fields
-- Prefer `Handles` clause in main code file over `AddHandler` in `InitializeComponent` for designed controls
+- CRITICAL: `Friend WithEvents controlName as ControlType` for control backing fields.
+- Strongly prefer event handlers `Sub`s with `Handles` clause in main code over `AddHandler` in  file`InitializeComponent`
 
 ---
 
 ## Classic Data Binding and MVVM Data Binding (.NET 8+)
 
-### Breaking Changes: .NET Framework vs .NET 6+
+### Breaking Changes: .NET Framework vs .NET 8+
 
-| Feature | .NET Framework <= 4.8.1 | .NET 6+ |
+| Feature | .NET Framework <= 4.8.1 | .NET 8+ |
 |---------|----------------------|---------|
 | Typed DataSets | Designer supported | Code-only (not recommended) |
 | Object Binding | Supported | Enhanced UI, fully supported |
@@ -304,20 +570,15 @@ mainViewModelBindingSource = new BindingSource(components);
 // Before SuspendLayout
 mainViewModelBindingSource.DataSource = typeof(MyApp.ViewModels.MainViewModel);
 
-// Bind properties (also for MVVM ViewModels)
+// Bind properties
 _txtDataField.DataBindings.Add(new Binding("Text", mainViewModelBindingSource, "PropertyName", true));
 
-// Bind commands (also for MVVM ViewModels)
+// Bind commands
 _tsmFile.DataBindings.Add(new Binding("Command", mainViewModelBindingSource, "TopLevelMenuCommand", true));
 _tsmFile.CommandParameter = "File";
 ```
 
 ---
-
-With this approach 
-- ViewModel/DataSource instances can be assigned to the Form's `DataContext` property at an early stage.
-- All nested controls inherit `DataContext` (ambient): the ViewModel/DataSource instances are accessible from every control in the hierarchy.
-- All other (user)controls can set their BindingSource instances/other DataSource properties as they see fit.
 
 ## WinForms Async Patterns (.NET 9+)
 
@@ -597,4 +858,3 @@ Use `DataContext` property (.NET 8+) of Form to pass and return modal data objec
 | 4 | Stick to coding style rules for `InitializeComponent` |
 | 5 | Designer files never use NRT annotations |
 | 6 | Modern C# features for regular code ONLY |
-

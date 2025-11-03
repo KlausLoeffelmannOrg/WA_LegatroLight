@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/_solution items/" />
+  <Folder Name="/_solution items/Copilot/">
+    <File Path="LegatroLight/.github/copilot-instructions.md" />
+  </Folder>
+  <Project Path="LegatroLight/LegatroLight/LegatroLight.csproj" />
+</Solution>
