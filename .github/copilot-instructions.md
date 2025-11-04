@@ -349,9 +349,9 @@ CRITICAL: When using the MVVM pattern, treat a ViewModel as a classic DataSource
 
 - Object DataSources: `INotifyPropertyChanged`, `BindingList<T>` required, prefer `ObservableObject` from MVVM CommunityToolkit.
 - `ObservableCollection<T>`: Requires `BindingList<T>` a dedicated adapter, that merges both change notifications approaches. Create, if not existing.
-- One-way-to-source: Unsupported  but workaround: create VM property with NO-OP property setter.
+- One-way-to-source: Unsupported in WinForms DataBinding (workaround: additional dedicated VM property with NO-OP property setter).
 
-### Add Object DataSource to Solution (also MVVM ViewModels, treat as DataSource)
+### Add Object DataSource to Solution, also true for MVVM ViewModels as DataSources
 
 To make types as DataSource accessible for the Designer, create `.datasource` file in `Properties\DataSources\`:
 
@@ -363,7 +363,7 @@ To make types as DataSource accessible for the Designer, create `.datasource` fi
 </GenericObjectDataSource>
 ```
 
-Subsequently, use BindingSource components bind DataSource type as "Mediator" instance between View and ViewModel. (Classic WinForms binding approach)
+Subsequently, use BindingSource components in Forms/UserControls to bind to the DataSource type as "Mediator" instance between View and ViewModel. (Classic WinForms binding approach)
 
 ### New MVVM Command Binding APIs in .NET 8+
 
@@ -375,6 +375,28 @@ Subsequently, use BindingSource components bind DataSource type as "Mediator" in
 | `*.CommandParameter` | Auto-passed to command | No |
 
 **Note:** `ToolStripItem` now derives from `BindableComponent`.
+
+### MVVM Pattern in WinForms (.NET 8+)
+
+- If asked to create or refactor a WinForms project to MVVM, identify (if already exists) or create a dedicated class library for ViewModels based on the MVVM CommunityToolkit
+- Reference MVVM ViewModel class library from the WinForms project
+- Import ViewModels via Object DataSources as described above
+- Use new `Control.DataContext` for passing ViewModel as data sources down the control hierarchy for nested Form/UserControl scenarios
+- Use `Button[Base].Command` or `ToolStripItem.Command` for MVVM command bindings. Use the CommandParameter property for passing parameters.
+- Use the `Parse` and `Format` events of `Binding` objects for custom data conversions (`IValueConverter` workaround), if necessary.
+
+```csharp - in main Form/UserControl code file.
+private void ApproachForIValueConverterWorkaround()
+{
+   // We assume the Binding was done in InitializeComponent and look up 
+   // the bound property like so:
+   Binding b = text1.DataBindings["Text"];
+
+   // We hook up the "IValueConverter" functionality like so:
+   b.Format += new ConvertEventHandler(DecimalToCurrencyString);
+   b.Parse += new ConvertEventHandler(CurrencyStringToDecimal);
+}
+```
 
 ### InitializeComponent Binding Pattern
 

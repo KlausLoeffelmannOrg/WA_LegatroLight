@@ -326,13 +326,13 @@ Defines projects that contain tasks and track time budgets. Projects are the pri
 
 ---
 
-### Tasks Table
+### TodoTasks Table
 
 Defines individual tasks within projects. Tasks are the atomic unit of work and can be assigned to multiple groups.
 
 | Field Name | Data Type | Attributes | Description |
 |------------|-----------|------------|-------------|
-| `IDTask` | `TEXT` (GUID) | PRIMARY KEY, NOT NULL | Unique task identifier |
+| `IDTodoTask` | `TEXT` (GUID) | PRIMARY KEY, NOT NULL | Unique task identifier |
 | `IDUser` | `TEXT` (GUID) | NOT NULL, FOREIGN KEY → Users(IDUser), INDEX | User who created the task |
 | `IDProject` | `TEXT` (GUID) | NOT NULL, FOREIGN KEY → Projects(IDProject), INDEX | Parent project |
 | `DisplayName` | `TEXT` | NOT NULL | Short task name displayed in TreeView and grids |
@@ -346,13 +346,13 @@ Defines individual tasks within projects. Tasks are the atomic unit of work and 
 | *(Common fields)* | | | DateCreated, DateLastEdited, DateDeleted, SyncGuidChanged |
 
 **Indexes:**
-- `IX_Tasks_IDUser` on `IDUser`
-- `IX_Tasks_IDProject` on `IDProject`
-- `IX_Tasks_DisplayName` on `DisplayName`
-- `IX_Tasks_DueDate` on `DueDate`
-- `IX_Tasks_DateFinished` on `DateFinished`
-- `IX_Tasks_DateCreated` on `DateCreated`
-- `IX_Tasks_Priority` on `Priority`
+- `IX_TodoTasks_IDUser` on `IDUser`
+- `IX_TodoTasks_IDProject` on `IDProject`
+- `IX_TodoTasks_DisplayName` on `DisplayName`
+- `IX_TodoTasks_DueDate` on `DueDate`
+- `IX_TodoTasks_DateFinished` on `DateFinished`
+- `IX_TodoTasks_DateCreated` on `DateCreated`
+- `IX_TodoTasks_Priority` on `Priority`
 
 **Calculated Fields:**
 - `TimeSpent` is automatically calculated as the sum of `Duration` from all associated TimeEntries
@@ -368,23 +368,23 @@ Defines individual tasks within projects. Tasks are the atomic unit of work and 
 
 ---
 
-### TasksGroupsRelations Table
+### TodoTasksGroupsRelations Table
 
 Many-to-many relationship table enabling manual assignment of tasks to groups. This supplements the automatic assignment based on `AutoRangeSpan`.
 
 | Field Name | Data Type | Attributes | Description |
 |------------|-----------|------------|-------------|
-| `IDTasksGroups` | `TEXT` (GUID) | PRIMARY KEY, NOT NULL | Unique relation identifier |
+| `IDTodoTasksGroups` | `TEXT` (GUID) | PRIMARY KEY, NOT NULL | Unique relation identifier |
 | `IDTodoTask` | `TEXT` (GUID) | NOT NULL, FOREIGN KEY → Tasks(IDTask), INDEX | Associated task |
 | `IDGroup` | `TEXT` (GUID) | NOT NULL, FOREIGN KEY → Groups(IDGroup), INDEX | Associated group |
 | `IDUser` | `TEXT` (GUID) | NOT NULL, FOREIGN KEY → Users(IDUser), INDEX | User who created the relation |
 | *(Common fields)* | | | DateCreated, DateLastEdited, DateDeleted, SyncGuidChanged |
 
 **Indexes:**
-- `IX_TasksGroupsRelations_IDTodoTask` on `IDTodoTask`
-- `IX_TasksGroupsRelations_IDGroup` on `IDGroup`
-- `IX_TasksGroupsRelations_IDUser` on `IDUser`
-- `IX_TasksGroupsRelations_Composite` on `(IDTodoTask, IDGroup)` (UNIQUE)
+- `IX_TodoTasksGroupsRelations_IDTodoTask` on `IDTodoTask`
+- `IX_TodoTasksGroupsRelations_IDGroup` on `IDGroup`
+- `IX_TodoTasksGroupsRelations_IDUser` on `IDUser`
+- `IX_TodoTasksGroupsRelations_Composite` on `(IDTodoTask, IDGroup)` (UNIQUE)
 
 **Business Rules:**
 - A task can be manually assigned to multiple groups
@@ -414,7 +414,7 @@ Records individual time tracking entries for tasks. This is the core table for t
 **Indexes:**
 - `IX_TimeEntries_IDUser` on `IDUser`
 - `IX_TimeEntries_IDProject` on `IDProject`
-- `IX_TimeEntries_IDTask` on `IDTask`
+- `IX_TimeEntries_IDTodoTask` on `IDTodoTask`
 - `IX_TimeEntries_StartTime` on `StartTime`
 - `IX_TimeEntries_EndTime` on `EndTime`
 
@@ -431,7 +431,7 @@ Records individual time tracking entries for tasks. This is the core table for t
 
 **Business Rules:**
 - When a TimeEntry is created, updated, or deleted:
-  - Recalculate `Task.TimeSpent` for the associated task
+  - Recalculate `TodoTask.TimeSpent` for the associated task
   - Recalculate `Project.TimeSpent` for the associated project
 - Time entries can be edited after creation (inline in DataGridView)
 - Soft-deleted time entries are excluded from `TimeSpent` calculations
@@ -525,7 +525,7 @@ Double-clicking a record in the list or pressing **New** opens a modal **Edit Di
 - **Resizable:** No
 - **Title Bar:**
   - New record: "New [Entity Type]"
-  - Editing: "Edit [Entity Type]: [RecordName]"
+  - Editing: "Edit [Entity Type]: [RecordName]"
 
 #### Layout Structure
 
@@ -1857,7 +1857,7 @@ Row 3: Date Row (nested TableLayoutPanel, 4 columns)
 - Items: All user's groups (except hidden groups if preference is set)
 - Item Format: [Symbol] GroupDisplayName
 - Item Rendering: Owner-drawn with symbol and colors
-- On check/uncheck: Adds/removes TasksGroupsRelations record
+- On check/uncheck: Adds/removes TodoTasksGroupsRelations record
 - Note: Items can be checked or unchecked; multiple selections allowed
 
 **Project:**
@@ -2444,39 +2444,3 @@ Modal dialog for configuring application preferences.
 - Dialog remains open until all errors are corrected
 
 ---
-
-## Terminology Reference
-
-This section provides English-German translations for domain terms used throughout the application.
-
-| English Term | German Term | Notes |
-|--------------|-------------|-------|
-| Functional Specification | Pflichtenheft | Detailed requirements document |
-| Base Data / Master Data | Stammdaten | Foundational configuration data |
-| Task / Work Item | Vorgang | Atomic unit of work |
-| Time Tracking | Zeiterfassung | Recording work time |
-| Symbol Configuration Table | Symboltabelle | Storage for visual icons |
-| Group | Gruppe | Organizational container for tasks |
-| Project | Projekt | Top-level work container |
-| Category | Kategorie | Color-coded classification |
-| Time Entry | Zeiteintrag | Single logged time interval |
-| User | Benutzer | Application user |
-| Display Name | Anzeigename | Human-readable identifier |
-| Due Date | Fälligkeitsdatum | Task/project deadline |
-| Estimated Effort | Geschätzter Aufwand | Predicted work duration |
-| Time Spent | Aufgewendete Zeit | Actual work duration |
-| Percent Done | Fertigstellungsgrad | Completion percentage |
-| Description | Beschreibung | Free-text details |
-| Symbol | Symbol | Visual icon character |
-
----
-
-## Document History
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 2025-10-22 | 2025-10-22 | Product Management | Merged AppDev Agent spec and Functional Spec; expanded all sections with implementation details; extracted development context to separate document |
-
----
-
-**End of Specification**
