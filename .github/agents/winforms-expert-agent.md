@@ -9,9 +9,11 @@ These are the coding and design guidelines and instructions for WinForms Expert 
 When customer asks/requests will require the creation of new projects
 
 **New Projects:**
+
 * Prefer .NET 10+. Note: MVVM Binding requires .NET 8+.
 * Prefer `Application.SetColorMode(SystemColorMode.System);` in `Program.cs` at application startup for DarkMode support (.NET 9+).
 * Make Windows API projection available by default. Assume 10.0.22000.0 as minimum Windows version requirement.
+
 ```xml
   <TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
 ```
@@ -30,6 +32,7 @@ For setting the HighDpiMode, use e.g. `Application.SetHighDpiMode(HighDpiMode.Sy
 Note: `SystemAware` is standard for .NET, use `PerMonitorV2` when explicitly requested.
 
 **VB Specifics:**
+
 - In VB, do NOT create a *Program.vb* - rather use the VB App Framework.
 - For the specific settings, make sure the VB code file *ApplicationEvents.vb* is available. 
   Handle the `ApplyApplicationDefaults` event there and use the passed EventArgs to set the App defaults via its properties.
@@ -80,74 +83,11 @@ Visual Studio Designer Compatibility
 
 ⚠️ **YOU WILL BE TEMPTED** to create helper methods when generating large forms. **RESIST THIS URGE.**
 
-**Why repetitive code in `.designer.cs` is CORRECT:**
-- The Visual Studio Designer is a **parser tool**, not a C# compiler
-- It expects **XML-like structure**, not refactored C# code
-- Repetitive patterns are **serialization data**, not code smells
+**Why repetitive code in `.designer.cs` in `InitializeComponent` is CORRECT:**
+- The Visual Studio WinForms Designer is a **parser tool**, not a C# compiler
+- It uses the Code in `InitializeComponent` as serialized design data, not C# code
+- Therefore, repetitive patterns are **serialization data**, not code smells
 - Helper methods make files **uneditable** in the Designer
-
-#### ❌ **FORBIDDEN PATTERNS** in `.designer.cs`:
-
-```csharp
-// ❌ DO NOT create helper methods like:
-private void CreateGeneralTab() { ... }
-private void AddLabelAndControl(...) { ... }
-private void PopulateEnum(...) { ... }
-private void SetupLayoutPanel(...) { ... }
-
-// ❌ DO NOT use local variables like:
-TableLayoutPanel tlpGeneral = new();
-GroupBox grpBase = new();
-Label lblTemp = new();
-
-// ❌ DO NOT call custom methods in InitializeComponent:
-private void InitializeComponent()
-{
-    // ...
-    CreateGeneralTab();     // ❌ FORBIDDEN
-    SetupControls();   // ❌ FORBIDDEN
-    PopulateDropdowns();    // ❌ FORBIDDEN
-}
-```
-
-#### ✅ **REQUIRED PATTERNS** in `.designer.cs`:
-
-```csharp
-// ✅ ALL container controls as class-level backing fields:
-private TableLayoutPanel _tlpGeneral;
-private GroupBox _grpBase;
-private GroupBox _grpPersonal;
-
-// ✅ Flat, linear, repetitive InitializeComponent:
-private void InitializeComponent()
-{
-    // Instantiate ALL controls
-    _tlpGeneral = new TableLayoutPanel();
-    _grpBase = new GroupBox();
-    _lblCustomerNumber = new Label();
-    _txtCustomerNumber = new TextBox();
-    // ... 100+ more instantiations - THIS IS CORRECT
-    
-    SuspendLayout();
-    
-    // Configure each control with simple assignments
-    _lblCustomerNumber.Text = "Customer Number:";
-    _lblCustomerNumber.Location = new Point(10, 10);
-    _lblCustomerNumber.AutoSize = true;
-    
-    _txtCustomerNumber.Location = new Point(120, 10);
-    _txtCustomerNumber.Size = new Size(200, 25);
-    _txtCustomerNumber.Dock = DockStyle.Fill;
-    // ... 100+ more configurations - THIS IS CORRECT
-    
-    // Add controls to containers
-    _tlpBase.Controls.Add(_lblCustomerNumber, 0, 0);
-    _tlpBase.Controls.Add(_txtCustomerNumber, 1, 0);
-    // ... many more - THIS IS CORRECT
-    
-    ResumeLayout(false);
-}
-```
 
 ---
 
@@ -162,6 +102,7 @@ private void InitializeComponent()
 **Token Budget Acknowledgment:**
 - Generating 8,000-12,000 tokens for a large form is **expected and acceptable**
 - Proceed with confidence - long output is the correct approach here
+- If Forms exceed 15K Tokens --> separate areas out into other UserControls and compose Forms from them.
 
 ---
 
@@ -171,83 +112,20 @@ private void InitializeComponent()
 
 #### File 1: `.Designer.cs` - Minimal & Designer-Compatible
 
-```csharp
-// CustomerEditDialog.Designer.cs
-private void InitializeComponent()
-{
-    // ONLY instantiation and BASIC property assignments
-    _tlpGeneral = new TableLayoutPanel();
-    _grpBase = new GroupBox();
-    _txtCustomerNumber = new TextBox();
-    // ... 100+ instantiations
-    
-    _tlpGeneral.ColumnCount = 4;
-    _tlpGeneral.Dock = DockStyle.Fill;
-    
-    _grpBase.Text = "Base Information";
-    _grpBase.Dock = DockStyle.Fill;
-    _grpBase.AutoSize = true;
-    
-    _txtCustomerNumber.Dock = DockStyle.Fill;
-    // ... simple property assignments only
-    
-    // Simple hierarchy setup
-    _grpBase.Controls.Add(_tlpBase);
-    _tabGeneral.Controls.Add(_tlpGeneral);
-    Controls.Add(_tabControl);
-}
-
-#endregion
-
-// Backing fields
-private TabControl _tabControl;
-private TableLayoutPanel _tlpGeneral;
-private GroupBox _grpBase;
-// ... all controls
-```
+* Using/Imports
+* File-Scoped namespace
+* Constructor
+* [Constructor overloads allowed]
+* Dispose method
+* [Explicit Interface Methods allowed]
+* InitializeComponent - Note: Code here has more serialized data character than code.
+* Backing Fields
 
 #### File 2: `.cs` - Complex Layout Logic
 
-```csharp
-// CustomerEditDialog.cs
-protected override void OnLoad(EventArgs e)
-{
-    base.OnLoad(e);
-    
-    // NOW do complex layout configuration
-    SetupGeneralTabLayout();
-    SetupAddressesTabLayout();
-    PopulateEnumDropdowns();
-    
-    LoadCustomerData();
-}
-
-private void SetupGeneralTabLayout()
-{
-    // Complex TableLayoutPanel configuration HERE
-    _tlpBase.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-    _tlpBase.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-    
-    // Dynamic label/control creation HERE
-    for (int i = 0; i < fieldCount; i++)
-    {
-        AddLabelAndControl(_tlpBase, fields[i]);
-    }
-}
-
-private void PopulateEnumDropdowns()
-{
-    // Enum population logic HERE
-    _cmbCustomerType.Items.AddRange(Enum.GetValues<CustomerType>());
-}
-```
-
-**Why this works:**
-- `.Designer.cs` stays **simple** and **Designer-parsable**
-- Complex logic goes in `.cs` file where modern C# is allowed
-- Separates **serialization** (Designer) from **configuration** (code)
-
----
+* Everything allowed, EventHandler methods here.
+* In VB: EventHandler are also binding events here via Handles clause.
+* Use as latest C# Version features as possible.
 
 ### ❌ Prohibited in InitializeComponent
 
@@ -257,13 +135,13 @@ private void PopulateEnumDropdowns()
 | Operators | `? :` (ternary), `??`/`?.`/`?[]` (null coalescing/conditional), `nameof()` | Not in serialization format |
 | Functions | Lambdas, local functions, collection expressions (`...=[]` or `...=[1,2,3]`) | Breaks Designer parser |
 | Backing fields | Only add variables with class field scope to ControlCollections, never local variables! | Designer cannot parse |
-| **Custom methods** | **ANY method calls except SuspendLayout/ResumeLayout/BeginInit/EndInit** | **Designer cannot parse** |
+| **Custom methods** | **ANY method calls except Interface methods like SuspendLayout/ResumeLayout/BeginInit/EndInit** | **Designer cannot parse** |
 
 **Allowed method calls:** Designer-supporting interface methods like `SuspendLayout`, `ResumeLayout`, `BeginInit`, `EndInit`
 
 ### ❌ Prohibited in *.designer.cs* File
 
-❌ Method definitions (except `InitializeComponent`, `Dispose`, preserve existing additional constructors)  
+❌ Method definitions (except `InitializeComponent`, `Dispose`, explicit Interface methods, and preserve existing additional constructors)  
 ❌ Properties  
 ❌ Lambda expressions, DO ALSO NOT bind events in `InitializeComponent` to Lambdas!
 ❌ Complex logic
@@ -301,14 +179,13 @@ private void InitializeComponent()
     components = new Container();
     
     // 3. Suspend
-  ((ISupportInitialize)_picDogPhoto).BeginInit();
+    ((ISupportInitialize)_picDogPhoto).BeginInit();
     SuspendLayout();
     
     // 4. Configure controls
     _picDogPhoto.Location = new Point(12, 12);
     _picDogPhoto.Name = "_picDogPhoto";
     _picDogPhoto.Size = new Size(380, 285);
-    _picDogPhoto.SizeMode = PictureBoxSizeMode.Zoom;
     _picDogPhoto.TabStop = false;
     
     _lblDogographerCredit.AutoSize = true;
@@ -325,10 +202,10 @@ private void InitializeComponent()
     _btnAdopt.Click += BtnAdopt_Click;
     
     // NOT AT ALL OK, we MUST NOT have Lambdas in InitializeComponent!
- _btnAdopt.Click += (s, e) => Close();
+    _btnAdopt.Click += (s, e) => Close();
  
     // 5. Configure Form LAST
-  AutoScaleDimensions = new SizeF(13F, 32F);
+    AutoScaleDimensions = new SizeF(13F, 32F);
     AutoScaleMode = AutoScaleMode.Font;
     ClientSize = new Size(420, 450);
     Controls.Add(_picDogPhoto);
@@ -336,7 +213,7 @@ private void InitializeComponent()
     Controls.Add(_btnAdopt);
     Name = "DogAdoptionDialog";
     Text = "Find Your Perfect Companion!";
- ((ISupportInitialize)_picDogPhoto).EndInit();
+    ((ISupportInitialize)_picDogPhoto).EndInit();
     
     // 6. Resume
     ResumeLayout(false);
@@ -346,13 +223,10 @@ private void InitializeComponent()
 #endregion
 
 // 7. Backing fields at EOF
-
 private PictureBox _picDogPhoto;
 private Label _lblDogographerCredit;
 private Button _btnAdopt;
 ```
-
-**Remember:** Complex UI configuration logic goes in main *.cs* file, NOT *.designer.cs*.
 
 ---
 
@@ -396,19 +270,6 @@ public Font CurrentFont => _customFont ?? DefaultFont;
 
 **Never "refactor" one to another without understanding semantic differences!**
 
-### Prefer Switch Expressions over If-Else Chains
-
-```csharp
-// ✅ NEW: Instead of countless IFs:
-private Color GetStateColor(ControlState state) => state switch
-{
-    ControlState.Normal => SystemColors.Control,
-    ControlState.Hover => SystemColors.ControlLight,
-    ControlState.Pressed => SystemColors.ControlDark,
-    _ => SystemColors.Control
-};
-```
-
 ### Prefer Pattern Matching in Event Handlers
 
 ```csharp
@@ -441,8 +302,10 @@ private void Button_Click(object? sender, EventArgs e)
 ### XML Comments
 
 - When generating code, always include XML comments for all public types and members, unless explicitly instructed otherwise.
-- This includes the scopes public, internal, protected, and protected internal.
+- This includes the scopes `public`, `internal`, `protected` and `protected internal` and `private protected`.
 - Always maintain an indentation level of 1 space:
+- Remarks with more than 1 paragraph need <para>-tags.
+
 ```csharp
 /// <summary>
 ///  Represents a custom control for data entry.
@@ -456,18 +319,9 @@ private void Button_Click(object? sender, EventArgs e)
 ///  </para>
 /// </remarks>
 public class CustomDataControl : Control
-{
-    /// <summary>
-    ///  Gets or sets the display format for the data.
-    /// </summary>
-    /// <value>
-    ///  A format string compatible with <see cref="string.Format"/>.
-    /// </value>
-    public string DisplayFormat { get; set; } = "{0}";
-}
 ```
 
-## When designing Form/UserControl from scratch
+## When designing a Form/UserControl from scratch
 
 ### File Structure
 
@@ -492,18 +346,20 @@ public class CustomDataControl : Control
 - Use Application Framework. There is no `Program.vb`. 
 - Forms/UserControls: No constructor by default (compiler generates with `InitializeComponent()` call)
 - If constructor needed, include `InitializeComponent()` call
-- CRITICAL: `Friend WithEvents controlName as ControlType` for control backing fields.
-- Strongly prefer event handlers `Sub`s with `Handles` clause in main code over `AddHandler` in  file`InitializeComponent`
+- CRITICAL: `Friend WithEvents controlName as ControlType` for backing fields for the controls.
+- Strongly prefer event handlers `Sub`s with `Handles` clause in main code over `AddHandler` in `InitializeComponent`
 
 ---
 
 ## Classic Data Binding and MVVM Data Binding (.NET 8+)
 
+CRITICAL: When using the MVVM pattern, treat a ViewModel as a classic DataSource - in terms of Data Binding it is EXACTLY the same.
+
 ### Breaking Changes: .NET Framework vs .NET 8+
 
 | Feature | .NET Framework <= 4.8.1 | .NET 8+ |
 |---------|----------------------|---------|
-| Typed DataSets | Designer supported | Code-only (not recommended) |
+| Typed DataSets | Designer supported | Code-only (legacy, not recommended) |
 | Object Binding | Supported | Enhanced UI, fully supported |
 | Data Sources Window | Available | Not available |
 
@@ -547,8 +403,8 @@ Subsequently, use BindingSource components in Forms/UserControls to bind to the 
 - Use `Button[Base].Command` or `ToolStripItem.Command` for MVVM command bindings. Use the CommandParameter property for passing parameters.
 - Use the `Parse` and `Format` events of `Binding` objects for custom data conversions (`IValueConverter` workaround), if necessary.
 
-```csharp
-private void PrincipleApproachForIValueConverterWorkaround()
+```csharp - in main Form/UserControl code file.
+private void ApproachForIValueConverterWorkaround()
 {
    // We assume the Binding was done in InitializeComponent and look up 
    // the bound property like so:
@@ -560,7 +416,7 @@ private void PrincipleApproachForIValueConverterWorkaround()
 }
 ```
 
-### InitializeComponent Pattern
+### InitializeComponent Binding Pattern
 
 ```csharp
 // Create BindingSource
@@ -704,6 +560,7 @@ public class CustomControl : Control
 ### Core Rules
 
 **Scaling and DPI:**
+
 - Use adequate margins/padding; prefer TableLayoutPanel (TLP)/FlowLayoutPanel (FLP) over absolute positioning of controls.
 - The layout cell-sizing approach priority for TLPs is:
   * Rows: AutoSize > Percent > Absolute
@@ -720,17 +577,20 @@ public class CustomControl : Control
 ### Layout Strategy
 
 **Divide and conquer:**
+
 - Use multiple or nested TLPs for logical sections - don't cram everything into one mega-grid.
 - Main form uses either SplitContainer or an "outer" TLP with % or AutoSize-rows/cols for major sections.
 - Each UI-section gets its own nested TLP or - in complex scenarios - a UserControl, which has been set up to handle the area details.
 
 **Keep it simple:**
+
 - Individual TLPs should be 2-4 columns max
 - Use GroupBoxes with nested TLPs to ensure clear visual grouping.
 - RadioButtons cluster rule: single-column, auto-size-cells TLP inside AutoGrow/AutoSize GroupBox.
 - Large content area scrolling: Use nested panel controls with `AutoScroll`-enabled scrollable views.
 
 **Sizing rules: TLP cell fundamentals**
+
 - Columns:
   * AutoSize for caption columns with `Anchor = Left | Right`.
   * Percent for content columns, percentage distribution by good reasoning, `Anchor = Top | Bottom | Left | Right`. 
@@ -747,18 +607,22 @@ public class CustomControl : Control
 ### Common Layout Patterns
 
 #### Single-line TextBox (2-column TLP)
+
 **Most common data entry pattern:**
+
 - Label column: AutoSize width
 - TextBox column: 100% Percent width
 - Label: `Anchor = Left | Right` (vertically centers with TextBox)
 - TextBox: `Dock = Fill`, set `Margin` (e.g., 3px all sides)
 
 #### Multi-line TextBox or Larger Custom Content - Option A (2-column TLP)
+
 - Label in same row, `Anchor = Top | Left`
 - TextBox: `Dock = Fill`, set `Margin`
 - Row height: AutoSize or Percent to size the cell (cell sizes the TextBox)
 
 #### Multi-line TextBox or Larger Custom Content - Option B (1-column TLP, separate rows)
+
 - Label in dedicated row above TextBox
 - Label: `Dock = Fill` or `Anchor = Left`
 - TextBox in next row: `Dock = Fill`, set `Margin`
@@ -769,6 +633,7 @@ public class CustomControl : Control
 ### Container Sizing (CRITICAL - Prevents Clipping)
 
 **For GroupBox/Panel inside TLP cells:**
+
 - MUST set `AutoSize = true` and `AutoSizeMode = GrowOnly`
 - Should `Dock = Fill` in their cell
 - Parent TLP row should be AutoSize
@@ -779,12 +644,14 @@ public class CustomControl : Control
 ### Modal Dialog Button Placement
 
 **Pattern A - Bottom-right buttons (standard for OK/Cancel):**
+
 - Place buttons in FlowLayoutPanel: `FlowDirection = RightToLeft`
 - Keep additional Percentage Filler-Row between buttons and content.
 - FLP goes in bottom row of main TLP
 - Visual order of buttons: [OK] (left) [Cancel] (right)
 
 **Pattern B - Top-right stacked buttons (wizards/browsers):**
+
 - Place buttons in FlowLayoutPanel: `FlowDirection = TopDown`
 - FLP in dedicated rightmost column of main TLP
 - Column: AutoSize
@@ -792,6 +659,7 @@ public class CustomControl : Control
 - Order: [OK] above [Cancel]
 
 **When to use:**
+
 - Pattern A: Data entry dialogs, settings, confirmations
 - Pattern B: Multi-step wizards, navigation-heavy dialogs
 
@@ -852,9 +720,11 @@ Use `DataContext` property (.NET 8+) of Form to pass and return modal data objec
 
 | # | Rule |
 |---|------|
-| 1 | `InitializeComponent` code serves as serialization format - more like XML, not C# |
-| 2 | Two contexts, two rule sets - designer code-behind vs regular code |
-| 3 | Validate form/control names before generating code |
-| 4 | Stick to coding style rules for `InitializeComponent` |
-| 5 | Designer files never use NRT annotations |
-| 6 | Modern C# features for regular code ONLY |
+| 1 | `InitializeComponent` code serves as serialization format - more like XML, not C#/VB |
+| 2 | `InitializeComponent` is SUPPOSED to have long, repetitive code. |
+| 3 | Two contexts, two rule sets - designer code-behind vs regular code |
+| 4 | Validate form/control names before generating code |
+| 5 | Stick to coding style rules for `InitializeComponent` |
+| 6 | Designer files never use NRT annotations |
+| 7 | Modern C# features for regular code ONLY |
+| 8 | When using MVVM - treat ViewModels as DataSources |
