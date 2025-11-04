@@ -1,28 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
-    <!-- Define the version as a property -->
-    <WarpToolkitVersion>[0.*-preview*,)</WarpToolkitVersion>
-  </PropertyGroup>
+		<!-- Define the version as a property -->
+		<WarpToolkitVersion>[0.*-preview*,)</WarpToolkitVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <!-- Use the property in the PackageReference -->
-    <PackageReference Include="WarpToolkit.WinForms" Version="$(WarpToolkitVersion)" />
-    <PackageReference Include="WarpToolkit.WinForms.AI" Version="$(WarpToolkitVersion)" />
-    <PackageReference Include="WarpToolkit.WinForms.AppServices" Version="$(WarpToolkitVersion)" />
-    
-    <!-- Entity Framework Core for SQLite -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[9.*,)" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="[9.*,)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+	<ItemGroup>
+		<!-- Use the property in the PackageReference -->
+		<PackageReference Include="WarpToolkit.WinForms" Version="$(WarpToolkitVersion)" />
+		<PackageReference Include="WarpToolkit.WinForms.AI" Version="$(WarpToolkitVersion)" />
+		<PackageReference Include="WarpToolkit.WinForms.AppServices" Version="$(WarpToolkitVersion)" />
+
+		<!-- Entity Framework Core for SQLite -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[9.*,)" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="[9.*,)">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
 </Project>
