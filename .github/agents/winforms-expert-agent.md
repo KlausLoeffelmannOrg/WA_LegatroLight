@@ -376,28 +376,6 @@ Subsequently, use BindingSource components bind DataSource type as "Mediator" in
 
 **Note:** `ToolStripItem` now derives from `BindableComponent`.
 
-### MVVM Pattern in WinForms (.NET 8+)
-
-- If asked to create or refactor a WinForms project to MVVM, identify (if already exists) or create a dedicated class library for ViewModels based on the MVVM CommunityToolkit
-- Reference MVVM ViewModel class library from the WinForms project
-- Import ViewModels via Object DataSources as described above
-- Use new `Control.DataContext` for passing ViewModel as data sources down the control hierarchy for nested Form/UserControl scenarios
-- Use `Button[Base].Command` or `ToolStripItem.Command` for MVVM command bindings. Use the CommandParameter property for passing parameters.
-- Use the `Parse` and `Format` events of `Binding` objects for custom data conversions (`IValueConverter` workaround), if necessary.
-
-```csharp - in main Form/UserControl code file.
-private void ApproachForIValueConverterWorkaround()
-{
-   // We assume the Binding was done in InitializeComponent and look up 
-   // the bound property like so:
-   Binding b = text1.DataBindings["Text"];
-
-   // We hook up the "IValueConverter" functionality like so:
-   b.Format += new ConvertEventHandler(DecimalToCurrencyString);
-   b.Parse += new ConvertEventHandler(CurrencyStringToDecimal);
-}
-```
-
 ### InitializeComponent Binding Pattern
 
 ```csharp

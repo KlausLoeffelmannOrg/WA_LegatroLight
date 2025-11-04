@@ -349,9 +349,9 @@ CRITICAL: When using the MVVM pattern, treat a ViewModel as a classic DataSource
 
 - Object DataSources: `INotifyPropertyChanged`, `BindingList<T>` required, prefer `ObservableObject` from MVVM CommunityToolkit.
 - `ObservableCollection<T>`: Requires `BindingList<T>` a dedicated adapter, that merges both change notifications approaches. Create, if not existing.
-- One-way-to-source: Unsupported  but workaround: create VM property with NO-OP property setter.
+- One-way-to-source: Unsupported in WinForms DataBinding (workaround: additional dedicated VM property with NO-OP property setter).
 
-### Add Object DataSource to Solution (also MVVM ViewModels, treat as DataSource)
+### Add Object DataSource to Solution, also true for MVVM ViewModels as DataSources
 
 To make types as DataSource accessible for the Designer, create `.datasource` file in `Properties\DataSources\`:
 
@@ -363,7 +363,7 @@ To make types as DataSource accessible for the Designer, create `.datasource` fi
 </GenericObjectDataSource>
 ```
 
-Subsequently, use BindingSource components bind DataSource type as "Mediator" instance between View and ViewModel. (Classic WinForms binding approach)
+Subsequently, use BindingSource components in Forms/UserControls to bind to the DataSource type as "Mediator" instance between View and ViewModel. (Classic WinForms binding approach)
 
 ### New MVVM Command Binding APIs in .NET 8+
 
