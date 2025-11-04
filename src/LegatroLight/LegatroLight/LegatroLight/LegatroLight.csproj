@@ -16,6 +16,13 @@
     <PackageReference Include="WarpToolkit.WinForms" Version="$(WarpToolkitVersion)" />
     <PackageReference Include="WarpToolkit.WinForms.AI" Version="$(WarpToolkitVersion)" />
     <PackageReference Include="WarpToolkit.WinForms.AppServices" Version="$(WarpToolkitVersion)" />
+    
+    <!-- Entity Framework Core for SQLite -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="[9.*,)" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="[9.*,)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
