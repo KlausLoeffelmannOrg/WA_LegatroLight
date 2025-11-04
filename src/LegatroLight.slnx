@@ -1,7 +1,11 @@
 <Solution>
   <Folder Name="/_solution items/" />
-  <Folder Name="/_solution items/Copilot/">
-    <File Path="LegatroLight/.github/copilot-instructions.md" />
+  <Folder Name="/_solution items/.github/">
+    <File Path="../.github/copilot-instructions.md" />
   </Folder>
-  <Project Path="LegatroLight/LegatroLight/LegatroLight.csproj" />
+  <Folder Name="/_solution items/.github/agents/">
+    <File Path="../.github/agents/scrum-expert-agent.md" />
+    <File Path="../.github/agents/winforms-expert-agent.md" />
+  </Folder>
+  <Project Path="LegatroLight/LegatroLight.csproj" />
 </Solution>
