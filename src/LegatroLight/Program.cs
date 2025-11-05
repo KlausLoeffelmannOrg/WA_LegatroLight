@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.WinForms;
 using System.Diagnostics;
 using WarpToolkit.WinForms.AppServices.ServiceExtensions;
+using LegatroLight.Services;
 
 namespace LegatroLight;
 
@@ -35,6 +36,10 @@ internal static class Program
         // builder.Services.AddWindowsFormsBlazorWebView();
 
         Debug.Assert(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+
+        // Register application services
+        builder.Services.AddScoped<IWindowsAuthenticationService, WindowsAuthenticationService>();
+        builder.Services.AddScoped<IDatabaseSeedService, DatabaseSeedService>();
 
         // Register the main form as a scoped service.
         // This is not only convenient, but also allows us to use dependency injection,

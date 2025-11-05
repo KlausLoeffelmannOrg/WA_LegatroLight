@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using WarpToolkit.WinForms.Extensions.UI;
 using LegatroLight.Data.Context;
+using LegatroLight.Data.Entities;
+using LegatroLight.Services;
+using LegatroLight.Dialogs;
 
 namespace LegatroLight;
 
@@ -71,7 +75,7 @@ public partial class FrmMain : Form, IServiceProvider
         _statusLabelDateTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
     }
 
-    private void OpenDatabase(string filePath)
+    private async void OpenDatabase(string filePath)
     {
         try
         {
@@ -91,6 +95,8 @@ public partial class FrmMain : Form, IServiceProvider
             AddToRecentFiles(filePath);
 
             _userSettingsService.SaveSetting(SettingsKey_LastDatabase, filePath);
+
+            await CheckAndHandleFirstStartAsync();
         }
         catch (Exception ex)
         {
@@ -227,5 +233,55 @@ public partial class FrmMain : Form, IServiceProvider
     private void TsmFileExit_Click(object? sender, EventArgs e)
     {
         Close();
+    }
+
+    /// <summary>
+    ///  Checks if this is a first start (empty Users table) and handles user setup.
+    /// </summary>
+    private async Task CheckAndHandleFirstStartAsync()
+    {
+        if (_dbContext is null)
+        {
+            return;
+        }
+
+        bool hasUsers = await _dbContext.Users.AnyAsync();
+
+        if (!hasUsers)
+        {
+            IWindowsAuthenticationService authService = _serviceProvider.GetRequiredService<IWindowsAuthenticationService>();
+            IDatabaseSeedService seedService = _serviceProvider.GetRequiredService<IDatabaseSeedService>();
+
+            WindowsAuthInfo authInfo = authService.GetCurrentUser();
+
+            using FrmUserSetupAssistant dialog = new();
+            dialog.PopulateFromWindowsAuth(authInfo);
+
+            if (dialog.ShowDialog(this) == DialogResult.OK && dialog.User is not null)
+            {
+                User newUser = dialog.User;
+
+                _dbContext.Users.Add(newUser);
+                await _dbContext.SaveChangesAsync();
+
+                await seedService.SeedSystemDataAsync(_dbContext, newUser.Id);
+
+                MessageBox.Show(
+                    this,
+                    "User setup completed successfully. System data has been initialized.",
+                    "Setup Complete",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show(
+                    this,
+                    "User setup was cancelled. The application requires a user account to continue.",
+                    "Setup Cancelled",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
     }
 }
